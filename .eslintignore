@@ -1,0 +1,4 @@
+# .eslintignore để ESLint bỏ qua các thư mục không cần kiểm tra.
+/node_modules
+/dist
+.env
