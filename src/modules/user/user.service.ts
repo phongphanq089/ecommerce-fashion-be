@@ -1,5 +1,5 @@
 // src/modules/user/user.service.ts
-import { CreateUserInput } from './user.schema';
+import { CreateUserInput } from './schema/user.schema';
 
 // Đây là một CSDL giả lập để minh họa
 const db = {

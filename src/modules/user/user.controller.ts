@@ -1,6 +1,6 @@
 // src/modules/user/user.controller.ts
 import { FastifyReply, FastifyRequest } from 'fastify';
-import { CreateUserInput } from './user.schema';
+import { CreateUserInput } from './schema/user.schema';
 import { createUser, getUsers } from './user.service';
 
 export async function createUserHandler(
