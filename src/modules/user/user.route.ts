@@ -1,23 +1,23 @@
-// src/modules/user/user.route.ts
 import { FastifyInstance } from 'fastify';
 import { createUserHandler, getUsersHandler } from './user.controller';
 import {
   createUserSchema,
   userResponseSchema,
   usersResponseSchema,
-} from './user.schema';
-// Import trực tiếp Zod schema thay vì $ref
+} from './schema/user.schema';
+import { USER_DESCRIPTIONS, USER_SUMMARIES, USER_TAG } from './user.docs';
 
 async function userRoutes(server: FastifyInstance) {
   server.post(
     '/',
     {
       schema: {
-        summary: 'Create a new user', // Thêm mô tả cho endpoint
-        tags: ['Users'], // Gom nhóm các endpoint
-        body: createUserSchema, // Dùng trực tiếp Zod schema
+        summary: USER_SUMMARIES.CREATE,
+        description: USER_DESCRIPTIONS.CREATE,
+        tags: [USER_TAG],
+        body: createUserSchema,
         response: {
-          201: userResponseSchema, // Dùng trực tiếp Zod schema
+          201: userResponseSchema,
         },
       },
     },
@@ -28,8 +28,9 @@ async function userRoutes(server: FastifyInstance) {
     '/',
     {
       schema: {
-        summary: 'Get all users',
-        tags: ['Users'],
+        summary: USER_SUMMARIES.GET_ALL,
+        description: USER_DESCRIPTIONS.GET_ALL,
+        tags: [USER_TAG],
         response: {
           200: usersResponseSchema,
         },
