@@ -1,8 +1,10 @@
 // src/index.ts
-
+import { ENV_CONFIG } from './config/env';
+if (ENV_CONFIG.NODE_ENV === 'production') {
+  require('module-alias/register');
+}
 import dotenv from 'dotenv';
 import { buildServer } from './app';
-import { ENV_CONFIG } from './config/env';
 import { LOGGER_CONSOLE } from './utils/log-console';
 
 dotenv.config();
@@ -14,6 +16,7 @@ const start = async () => {
     await server.listen({ port: ENV_CONFIG.PORT, host: ENV_CONFIG.HOST });
     LOGGER_CONSOLE.logStartupInfo();
   } catch (err) {
+    console.error('❌ Failed to resolve path alias "@". Please check paths.');
     server.log.error(err);
     process.exit(1);
   }
