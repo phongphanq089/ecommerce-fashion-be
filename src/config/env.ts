@@ -6,6 +6,7 @@ export const ENV_CONFIG = {
   PORT: parseInt(process.env.PORT || '3000', 10),
   HOST: process.env.HOST || '127.0.0.1',
   NODE_ENV: process.env.NODE_ENV || 'development',
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || '',
 
   IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
@@ -24,7 +25,7 @@ export const ENV_CONFIG = {
     | 'd'}`,
   BCRYPT_ROUNDS: process.env.BCRYPT_ROUNDS || '',
   //========================//
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || '',
+
   //========= KEY SEND MAIL =========//
   BREVO_API_KEY: process.env.BREVO_API_KEY || '',
   ADMIN_EMAIL_ADDRESS: process.env.ADMIN_EMAIL_ADDRESS || '',

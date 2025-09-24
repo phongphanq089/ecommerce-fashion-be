@@ -8,10 +8,22 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUI from '@fastify/swagger-ui';
 import registerRoutes from './routes';
 import { ENV_CONFIG } from './config/env';
+import fastifyCors from '@fastify/cors';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
   const server = Fastify().withTypeProvider<ZodTypeProvider>();
+
+  // ==== CORS ====  //
+  server.register(fastifyCors, {
+    origin: [
+      ENV_CONFIG.CLIENT_ORIGIN,
+      `http://localhost:${ENV_CONFIG.PORT}`,
+      'http://127.0.0.1:5371',
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  });
 
   // Thêm validator và serializer của Zod
   server.setValidatorCompiler(validatorCompiler);
