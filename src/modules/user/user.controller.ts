@@ -7,13 +7,8 @@ export async function createUserHandler(
   request: FastifyRequest<{ Body: CreateUserInput }>,
   reply: FastifyReply
 ) {
-  try {
-    const user = await createUser(request.body);
-    return reply.code(201).send(user);
-  } catch (e) {
-    console.error(e);
-    return reply.code(500).send({ message: 'Internal Server Error' });
-  }
+  const user = await createUser(request.body);
+  return reply.code(201).send(user);
 }
 
 export async function getUsersHandler() {

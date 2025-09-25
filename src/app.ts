@@ -9,10 +9,24 @@ import fastifySwaggerUI from '@fastify/swagger-ui';
 import registerRoutes from './routes';
 import { ENV_CONFIG } from './config/env';
 import fastifyCors from '@fastify/cors';
+import { zodErrorHandlerPlugin } from './middleware/zodErrorHandlerPlugin';
+import * as Sentry from '@sentry/node';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
-  const server = Fastify().withTypeProvider<ZodTypeProvider>();
+  const server = Fastify({
+    logger: ENV_CONFIG.NODE_ENV === 'development',
+  }).withTypeProvider<ZodTypeProvider>();
+
+  Sentry.init({
+    dsn: 'https://058432d00eeeabe1802745fc31ce1ce5@o4510077958750208.ingest.de.sentry.io/4510077962420304',
+    integrations: [
+      // send console.log, console.warn, and console.error calls as logs to Sentry
+      Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
+    ],
+    // Enable logs to be sent to Sentry
+    enableLogs: true,
+  });
 
   // ==== CORS ====  //
   server.register(fastifyCors, {
@@ -37,7 +51,7 @@ export function buildServer() {
         description: 'API documentation for the ecommerce website',
         version: '1.0.0',
       },
-      servers: [{ url: `http://localhost:${ENV_CONFIG.PORT}` }],
+      servers: [{ url: ENV_CONFIG.SERVER_URL }, { url: ENV_CONFIG.SERVER_URL }],
     },
   });
 
@@ -64,8 +78,12 @@ export function buildServer() {
     },
   });
 
-  // Đăng ký routes như bình thường
+  // 1. Đăng ký plugin xử lý lỗi
+  // Nó nên được đăng ký trước các route
+  server.register(zodErrorHandlerPlugin);
+  // Sentry.setupFastifyErrorHandler(server);
 
+  // Đăng ký routes như bình thường
   registerRoutes(server);
 
   // ======= RENDER API DEFAULT ======= //

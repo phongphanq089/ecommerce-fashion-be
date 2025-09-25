@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\.b231576b60fa8ccb152bb7f20076a754b3e8f736-audit.json",
+    "files": [
+        {
+            "date": 1758715740650,
+            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-24.log",
+            "hash": "f774a49f62327f51fef68168664550ac64a2f49f27419a7120251b8f548f6d50"
+        },
+        {
+            "date": 1758769118202,
+            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-25.log",
+            "hash": "84e591f7dfc32c98ce5441854034e9e19c79fdeb37fc9c3ae2ec1819818eb92b"
+        }
+    ],
+    "hashType": "sha256"
+}
