@@ -4,8 +4,12 @@
 # Build output
 /dist
 
+/logs
+
 # Environment variables
 .env
 
 # Logs
 *.log
+
+
