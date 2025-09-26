@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { LOGS_DESCRIPTIONS, LOGS_SUMMARIES, LOGS_TAG } from './logs.docs';
 import { createReadStream } from 'fs';
 import readline from 'readline';
+import { sendResponseError, sendResponseSuccess } from '@/utils/sendResponse';
 
 export default async function logRoute(fastify: FastifyInstance) {
   const logDir = path.resolve('logs');
@@ -17,7 +18,8 @@ export default async function logRoute(fastify: FastifyInstance) {
     handler: async (_, reply) => {
       const files = await fs.readdir(logDir);
       const logFiles = files.filter((f) => f.endsWith('.log'));
-      return reply.send({ files: logFiles });
+
+      return sendResponseSuccess(200, reply, 'Get Logfile ', logFiles);
     },
   }),
   fastify.get('/view/:filename', {
@@ -53,9 +55,19 @@ export default async function logRoute(fastify: FastifyInstance) {
             }
           });
 
-        return reply.send({ logs: lines });
+        return sendResponseSuccess(
+          200,
+          reply,
+          `Get Logfile ${filename}`,
+          lines
+        );
       } catch (e) {
-        return reply.status(404).send({ error: 'Log file not found' });
+        return sendResponseError(
+          404,
+          reply,
+          `Log file ${filename} not found`,
+          null
+        );
       }
     },
   })),
@@ -98,9 +110,20 @@ export default async function logRoute(fastify: FastifyInstance) {
             }
           }
         }
-        return reply.send({ matches });
+
+        return sendResponseSuccess(
+          200,
+          reply,
+          `Get Logfile ${filename}`,
+          matches
+        );
       } catch (e) {
-        return reply.status(500).send({ error: 'Unable to search log file' });
+        return sendResponseError(
+          404,
+          reply,
+          `Unable to search log file ${filename}`,
+          null
+        );
       }
     },
   })),
@@ -116,9 +139,19 @@ export default async function logRoute(fastify: FastifyInstance) {
         const filePath = path.join(logDir, filename);
         try {
           await fs.unlink(filePath);
-          return reply.send({ message: 'Log file deleted successfully' });
+
+          return sendResponseSuccess(
+            200,
+            reply,
+            `Log file ${filename} deleted successfully`
+          );
         } catch (e) {
-          return reply.status(404).send({ error: 'Log file not found' });
+          return sendResponseError(
+            404,
+            reply,
+            `Log file ${filePath} not found`,
+            null
+          );
         }
       },
     }));
