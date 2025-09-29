@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Model người dùng
+model User {
+  id             String @id @default(uuid())
+  email          String @unique
+  name           String?
+  password       String // sẽ được hash trước khi lưu
+  role           UserRole @default(CUSTOMER)
+  createAt       DateTime @default(now())
+  updateAt       DateTime @updatedAt
+
+  profile        Profile?  // Quan hệ 1-1 với Profile
+   addresses     Address[] // 1 User có nhiều Address
+  cart           Cart?     // 1 User có 1 Cart
+  order          Order[]
+}
+
+model Profile {
+  id            String @id @default(uuid())
+  firstName     String
+  lastName      String
+  phone         String? @unique
+  avatarUrl     String?
+  userId        String @unique // Khóa ngoại cho quan hệ 1-1
+  user          User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  id          String  @id @default(cuid())
+  street      String
+  city        String
+  province    String
+  postalCode  String
+  country     String
+  isDefault   Boolean @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  orders Order[] // Một địa chỉ có thể được dùng cho nhiều đơn hàng
+}
+
+
+// ===================================
+// KHU VỰC SẢN PHẨM (PRODUCTS)
+// ===================================
+model Category {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique // Dùng cho URL thân thiện SEO
+  // Dùng cho danh mục đa cấp (VD: Thời trang > Áo > Áo Sơ Mi)
+  parentId String?
+  parent   Category?  @relation("SubCategories", fields: [parentId], references: [id], onDelete: Restrict)
+  children Category[] @relation("SubCategories")
+  products Product[]
+}
+
+// Model sản phẩm
+model Product {
+  id            String @id @default(uuid())
+  name          String
+  slug          String @unique
+  description   String
+  images ProductImage[]
+  createdAt     DateTime @default(now())
+  updateAt      DateTime @updatedAt
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+  variants ProductVariant[] // 1 Product có nhiều Variant
+}
+
+model ProductVariant {
+  id            String @id @default(ulid())
+  sku           String @unique  // Stock Keeping Unit - Mã định danh sản phẩm duy nhất
+  price         Float
+  stockQuantity Int    @default(0)
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Quan hệ n-n với các giá trị thuộc tính (VD: Size M, Color Red)
+  attributes AttributeValue[]
+  cartItems CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+}
+
+// ===================================
+// KHU VỰC QUẢN LÝ MEDIA (MEDIA MANAGEMENT)
+// ===================================
+model MediaFolder {
+  id            String @id @default(uuid())
+  name          String
+  // Dùng cho thư mục đa cấp (cha-con)
+  parentId      String?
+  parent        MediaFolder?  @relation("SubFolders", fields: [parentId], references: [id], onDelete: Restrict)
+  children      MediaFolder[] @relation("SubFolders")
+  // Một thư mục chứa nhiều file media
+  media         Media[]
+}
+
+model Media {
+  id           String   @id @default(uuid())
+  fileName     String
+  url          String   // URL đến file trên storage (S3, Cloudinary...)
+  fileType     MediaType
+  size         Int      // Kích thước file (bytes)
+  altText      String?  // Text thay thế cho SEO và người khiếm thị
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  // Quan hệ: Media có thể nằm trong 1 thư mục
+  folderId     String?
+  folder       MediaFolder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  // Quan hệ 1-1: Một media item chỉ có thể được dùng bởi một ProductImage
+  // Điều này ngăn 1 file media xuất hiện trong 2 gallery sản phẩm khác nhau.
+  // Nếu bạn muốn tái sử dụng, hãy bỏ @unique trên mediaId ở ProductImage.
+  productImage ProductImage?
+}
+
+model ProductImage {
+  id           String @id @default(cuid())
+  displayOrder Int    @default(0) // Dùng để sắp xếp thứ tự ảnh (0 là ảnh chính)
+  // Quan hệ với Product: Khi Product bị xóa, liên kết này cũng bị xóa
+  productId     String
+  product       Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  // Quan hệ với Media: Khi Media bị xóa, liên kết này cũng bị xóa
+  mediaId       String @unique
+  media         Media  @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, mediaId]) // Đảm bảo không gán cùng 1 ảnh cho 1 sản phẩm 2 lần
+  @@index([productId])
+}
+
+
+// --- Hệ thống thuộc tính cho biến thể ---
+model Attribute {
+  id          String @id @default(uuid())
+  name        String @unique // vd: "size", "color"
+  values      AttributeValue[]
+}
+
+model AttributeValue {
+  id            String    @id @default(uuid())
+  value         String    // VD: "S", "M", "L" hoặc "Red", "Blue"
+  attributeId   String
+  attribute     Attribute @relation(fields: [attributeId] , references: [id], onDelete: Cascade)
+  variants      ProductVariant[] // n-n với ProductVariant
+
+  @@unique([attributeId, value]) // Cặp (Size, M) là duy nhất
+}
+
+
+// ===================================
+// KHU VỰC MUA SẮM & ĐƠN HÀNG
+// ===================================
+
+model Cart {
+  id            String      @id @default(uuid())
+  createAt      DateTime    @default(now())
+  updateAt      DateTime    @updatedAt
+  userId        String      @unique
+  user          User        @relation(fields: [userId] , references: [id] , onDelete: Cascade)
+  cartItem      CartItem[]
+}
+
+model CartItem {
+  id            String      @id @default(cuid())
+  quantity      Int
+  cartId        String
+  cart          Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  // Liên kết trực tiếp với BIẾN THỂ sản phẩm, không phải sản phẩm cha
+  productVariantId String
+  // onDelete: Cascade ===> Xóa cha → xóa con theo.
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  @@unique([cartId, productVariantId]) // Mỗi biến thể chỉ xuất hiện 1 lần trong giỏ hàng
+}
+
+
+model Order {
+  id              String      @id @default(uuid())
+  totalAmount     Float
+  status          OrderStatus @default(PENDING)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  // Địa chỉ giao hàng được snapshot lại vào lúc đặt hàng
+  shippingAddressId String
+  // onDelete: Restrict Không cho xóa cha nếu có con.
+  shippingAddress   Address @relation(fields: [shippingAddressId], references: [id], onDelete: Restrict)
+
+  items           OrderItem[]
+  payment         Payment?
+
+  // Áp dụng mã giảm giá
+  couponId        String?
+  //onDelete: SetNull: Xóa cha → con được giữ lại nhưng field quan hệ = NULL.
+  coupon          Coupon?      @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  discountAmount  Float        @default(0)
+
+}
+
+model OrderItem {
+  id        String @id @default(cuid())
+  quantity  Int
+  priceAtPurchase Float // Lưu lại giá tại thời điểm mua, phòng trường hợp giá sản phẩm thay đổi
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productVariantId String
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, productVariantId])
+ }
+
+
+ // ===================================
+// KHU VỰC PHỤ TRỢ
+// ===================================
+
+model Coupon {
+  id           String       @id @default(cuid())
+  code         String       @unique
+  discountType DiscountType // PERCENTAGE hoặc FIXED
+  value        Float        // Giá trị giảm (VD: 10 cho 10% hoặc 100000 cho 100k VNĐ)
+  expiresAt    DateTime
+  isActive     Boolean      @default(true)
+
+  orders       Order[]
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  amount        Float
+  status        PaymentStatus @default(PENDING)
+  method        String        // VD: "Credit Card", "Momo", "COD"
+  transactionId String?       // ID từ cổng thanh toán
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  orderId       String        @unique
+  order         Order         @relation(fields: [orderId], references: [id])
+}
+
+
+// ===================================
+// ENUMS (Các loại dữ liệu định sẵn)
+// ===================================
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+

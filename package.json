@@ -9,7 +9,11 @@
     "start": "node -r tsconfig-paths/register dist/server.js",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prisma_migrate": "npx prisma migrate dev --name init",
+    "generate_type_client": "npx prisma generate",
+    "reset-db": "prisma migrate reset",
+    "history": "npx prisma migrate status"
   },
   "_moduleAliases": {
     "@": "dist"
@@ -22,6 +26,7 @@
     "@fastify/cors": "^11.1.0",
     "@fastify/swagger": "^9.5.1",
     "@fastify/swagger-ui": "^5.2.3",
+    "@prisma/client": "^6.16.2",
     "@sentry/node": "^10.15.0",
     "cfonts": "^2.4.8",
     "chalk": "^5.6.2",
@@ -31,6 +36,7 @@
     "fastify-type-provider-zod": "^6.0.0",
     "module-alias": "^2.2.3",
     "pino-pretty": "^13.1.1",
+    "prisma": "^6.16.2",
     "tsconfig-paths": "^4.2.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0",
