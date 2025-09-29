@@ -6,6 +6,7 @@ if (ENV_CONFIG.NODE_ENV === 'production') {
 import dotenv from 'dotenv';
 import { buildServer } from './app';
 import { LOGGER_CONSOLE } from './utils/log-console';
+import { logger } from './utils/logger';
 
 dotenv.config();
 
@@ -22,14 +23,14 @@ const start = async () => {
   }
 };
 
-// process.on('SIGINT', () => {
-//   logger.info('🛑 SIGINT received. Exiting...');
-//   process.exit(0);
-// });
+process.on('SIGINT', () => {
+  logger.info('🛑 SIGINT received. Exiting...');
+  process.exit(0);
+});
 
-// process.on('SIGTERM', () => {
-//   logger.info('🛑 SIGTERM received. Exiting...');
-//   process.exit(0);
-// });
+process.on('SIGTERM', () => {
+  logger.info('🛑 SIGTERM received. Exiting...');
+  process.exit(0);
+});
 
 start();
