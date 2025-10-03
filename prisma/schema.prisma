@@ -123,6 +123,7 @@ model Media {
   // Điều này ngăn 1 file media xuất hiện trong 2 gallery sản phẩm khác nhau.
   // Nếu bạn muốn tái sử dụng, hãy bỏ @unique trên mediaId ở ProductImage.
   productImage ProductImage?
+  fileId String?
 }
 
 model ProductImage {

@@ -13,7 +13,6 @@ import crypto from 'crypto';
 const pump = util.promisify(pipeline);
 
 async function processSingleFile(req: FastifyRequest, reply: FastifyReply) {
-  console.log('=========================> Lỗi lỗi');
   const data = await req.file({
     limits: {
       fileSize: LIMIT_COMMON_FILE_SIZE,
@@ -27,16 +26,23 @@ async function processSingleFile(req: FastifyRequest, reply: FastifyReply) {
   if (!ALLOW_COMMOM_FILE_TYPES_GALLERY.includes(data.mimetype)) {
     throw new AppError('File type is invalid.', 415);
   }
-
+  // Logic tạo file và lưu trữ tương tự như hàm single
   const tmpFolder = path.join(__dirname, '../../tmp');
 
+  // kiểm tra có folder này ko thì tự tạo folder tmp
   if (!fs.existsSync(tmpFolder)) {
     fs.mkdirSync(tmpFolder, { recursive: true });
   }
 
+  //lấy ra đuôi file vd : .png
   const ext = path.extname(data.filename);
+
+  // mã hoá tên file
   const name = crypto.randomBytes(16).toString('hex');
+
   const newFilename = `${Date.now()}-${name}${ext}`;
+
+  // lất ra đường dẫn cụ thể của file đó vd :  D:\PROJECT-PORTFOLIO\ecommerce-fashion-be\tmp\1759159698334-88229f80cdca15ae856a303fdf51e7c6.png
   const filePath = path.join(tmpFolder, newFilename);
 
   await pump(data.file, fs.createWriteStream(filePath));
@@ -48,7 +54,6 @@ async function processSingleFile(req: FastifyRequest, reply: FastifyReply) {
   };
 }
 
-// --- HÀM XỬ LÝ NHIỀU FILE (MỚI) --- ✨
 async function processMultipleFiles(req: FastifyRequest, reply: FastifyReply) {
   const savedFiles = [];
   const parts = req.files({

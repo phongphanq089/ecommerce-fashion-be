@@ -1,5 +1,5 @@
 import logRoute from '@/modules/log/log.route';
-import mediaRoutes from '@/modules/media/media.route';
+import mediaRoutes from '@/modules/media-file/media.route';
 import userRoutes from '@/modules/user/user.route';
 import { FastifyInstance } from 'fastify';
 

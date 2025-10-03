@@ -9,3 +9,5 @@ export const ALLOW_COMMOM_FILE_TYPES_GALLERY = [
   'image/gif',
   'image/webp',
 ];
+
+export const DEFAULT_FOLDER_NAME = 'All Files';
