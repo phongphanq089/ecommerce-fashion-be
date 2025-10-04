@@ -11,6 +11,7 @@ import { ENV_CONFIG } from './config/env';
 import fastifyCors from '@fastify/cors';
 import { zodErrorHandlerPlugin } from './middleware/zodErrorHandlerPlugin';
 import * as Sentry from '@sentry/node';
+import multipart from '@fastify/multipart';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
@@ -43,6 +44,14 @@ export function buildServer() {
   server.setValidatorCompiler(validatorCompiler);
   server.setSerializerCompiler(serializerCompiler);
 
+  // ======================================================
+  // Đăng ký Multipart LÊN TRƯỚC để Fastify hiểu content type này
+  server.register(multipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024,
+    },
+  });
+
   // Đăng ký Swagger
   server.register(fastifySwagger, {
     openapi: {
@@ -58,6 +67,7 @@ export function buildServer() {
   // Đăng ký Swagger UI để hiển thị tài liệu
   server.register(fastifySwaggerUI, {
     routePrefix: '/docs',
+
     uiConfig: {
       docExpansion: 'list',
       deepLinking: false,
@@ -78,7 +88,7 @@ export function buildServer() {
     },
   });
 
-  // 1. Đăng ký plugin xử lý lỗi
+  //  Đăng ký plugin xử lý lỗi
   // Nó nên được đăng ký trước các route
   server.register(zodErrorHandlerPlugin);
   // Sentry.setupFastifyErrorHandler(server);
