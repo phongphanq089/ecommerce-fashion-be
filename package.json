@@ -23,7 +23,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@anatine/zod-openapi": "^2.2.8",
     "@fastify/cors": "^11.1.0",
     "@fastify/multipart": "^9.2.1",
     "@fastify/swagger": "^9.5.1",
