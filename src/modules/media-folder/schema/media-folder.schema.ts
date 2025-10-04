@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const mediaFolderSchema = z.object({
   name: z.string().min(1, 'Folder name is required'),
-  parentId: z.uuid().nullable().optional(),
+  parentId: z.uuid().nullable(),
 });
 
 export type MediaFolderInput = z.infer<typeof mediaFolderSchema>;
