@@ -29,6 +29,15 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       tags: [MEDIA_TAG],
       description: MEDIA_DESCRIPTIONS.UPLOAD_FILE_SINGLE,
       consumes: ['multipart/form-data'],
+      querystring: {
+        type: 'object',
+        properties: {
+          folderId: {
+            type: 'string',
+            format: 'uuid',
+          },
+        },
+      },
       body: {
         type: 'object',
         required: ['file'],
@@ -52,6 +61,15 @@ export default function mediaRoutes(fastify: FastifyInstance) {
         tags: [MEDIA_TAG],
         description: MEDIA_DESCRIPTIONS.UPLOAD_FILE_MULTIPLE,
         consumes: ['multipart/form-data'],
+        querystring: {
+          type: 'object',
+          properties: {
+            folderId: {
+              type: 'string',
+              format: 'uuid',
+            },
+          },
+        },
         body: {
           type: 'object',
           required: ['files'],

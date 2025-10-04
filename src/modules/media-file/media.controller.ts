@@ -6,7 +6,6 @@ import {
   DeleteMediaTypeMultipleInput,
   DeleteMediaTypeSigleInput,
 } from './schema/media.schema';
-import { string } from 'zod';
 
 export const mediaController = {
   createMediaSingle: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -17,7 +16,7 @@ export const mediaController = {
     try {
       const fileBuffer = await fs.readFile(file.path);
 
-      const folderId = ((req?.body as any)?.folderId as string) || '';
+      const folderId = ((req.query as any)?.folderId as string) || '';
 
       const media = await mediaService.createMediaSingle({
         fileBuffer,
@@ -48,7 +47,9 @@ export const mediaController = {
     }
 
     try {
-      const folderId = ((req?.body as any)?.folderId as string) || undefined;
+      const { folderId } = req.query as {
+        folderId?: string;
+      };
 
       const medias = await mediaService.createMediaMultiple(files, folderId);
 

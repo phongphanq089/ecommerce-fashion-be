@@ -65,6 +65,8 @@ class MediaService {
    * @returns Danh sách media record mới tạo
    */
   async createMediaSingle(data: CreateMediaDTO) {
+    const folder = await this._getFolderForMedia(data.folderId);
+
     const uploadResult = await handleExternalCall(
       () =>
         uploadImageKitProvider.streamUpload(
@@ -77,8 +79,6 @@ class MediaService {
         errorMessage: 'Failed to upload image.',
       }
     );
-
-    const folder = await this._getFolderForMedia(data.folderId);
 
     const newMedia = await this.repo.createMedia({
       fileName: data.altText ?? `media-${Date.now()}`,

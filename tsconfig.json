@@ -26,12 +26,12 @@
     "exactOptionalPropertyTypes": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "baseUrl": "./src",
     "typeRoots": ["types", "./node_modules/@types"],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
+
   "include": ["src"],
   "exclude": ["node_modules", "dist", "tests"]
 }
