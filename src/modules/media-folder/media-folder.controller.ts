@@ -29,10 +29,11 @@ export const mediaFolderController = {
   },
 
   async deleteHandler(
-    req: FastifyRequest<{ Body: FolderIdInput }>,
+    req: FastifyRequest<{ Params: FolderIdInput }>,
     reply: FastifyReply
   ) {
-    const { id } = req.body;
+    const { id } = req.params;
+
     const result = await mediaFolderService.deleteFolder(id);
     return sendResponseSuccess(
       201,

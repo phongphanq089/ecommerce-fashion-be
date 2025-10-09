@@ -4,7 +4,7 @@ import { mediaController } from './media.controller';
 import { MEDIA_DESCRIPTIONS, MEDIA_SUMMARIES, MEDIA_TAG } from './media.docs';
 import {
   deleteMediaMultipleSchema,
-  deleteMediaSchema,
+  // deleteMediaSchema,
 } from './schema/media.schema';
 import { zodValidate } from '@/utils/zodValidate';
 /**
@@ -124,12 +124,12 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       },
       handler: mediaController.getMedia,
     }),
-    fastify.delete('/media-delete-single', {
+    fastify.delete('/media-delete-single/:id', {
       schema: {
         summary: MEDIA_SUMMARIES.DELETE_SINGLE,
         tags: [MEDIA_TAG],
         description: MEDIA_DESCRIPTIONS.DELETE_SINGLE,
-        body: {
+        querys: {
           type: 'object',
           required: ['Id'],
           properties: {
@@ -143,10 +143,10 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       validatorCompiler: ({ schema }) => {
         return (data: any) => true;
       },
-      preHandler: [zodValidate(deleteMediaSchema)],
+      // preHandler: [zodValidate(deleteMediaSchema)],
       handler: mediaController.deleteMediaSingle,
     }),
-    fastify.delete('/media-delete-multiple', {
+    fastify.post('/media-delete-multiple', {
       schema: {
         summary: MEDIA_SUMMARIES.DELETE_MULTIPLE,
         tags: [MEDIA_TAG],

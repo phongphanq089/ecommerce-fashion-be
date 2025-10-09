@@ -92,9 +92,15 @@ export const mediaController = {
 
     return sendResponseSuccess(201, reply, 'Get List media success', data);
   },
-  deleteMediaSingle: async (req: FastifyRequest, reply: FastifyReply) => {
+  deleteMediaSingle: async (
+    req: FastifyRequest<{ Params: { id: string } }>,
+    reply: FastifyReply
+  ) => {
+    const param = {
+      Id: req.params.id,
+    };
     const result = await mediaService.deleteMediaSingle(
-      req.body as DeleteMediaTypeSigleInput
+      param as DeleteMediaTypeSigleInput
     );
     return reply.send({
       success: true,

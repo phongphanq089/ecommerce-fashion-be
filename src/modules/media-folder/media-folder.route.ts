@@ -6,7 +6,6 @@ import {
   MEDIA_FOLDER_TAG,
 } from './media.docs';
 import {
-  folderIdSchema,
   mediaFolderSchema,
   updateFolderSchema,
 } from './schema/media-folder.schema';
@@ -73,12 +72,12 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
     preHandler: [zodValidate(updateFolderSchema)],
     handler: mediaFolderController.updateHandler,
   });
-  fastify.delete('/delete', {
+  fastify.delete('/delete/:id', {
     schema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.DELETE,
       description: MEDIA_FOLDER_DESCRIPTIONS.DELETE,
-      body: {
+      querys: {
         type: 'object',
         required: ['id'],
         properties: {
@@ -92,7 +91,7 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
     validatorCompiler: ({ schema }) => {
       return (data: any) => true;
     },
-    preHandler: [zodValidate(folderIdSchema)],
+    // preHandler: [zodValidate(folderIdSchema)],
     handler: mediaFolderController.deleteHandler,
   });
 };
