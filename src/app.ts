@@ -35,6 +35,7 @@ export function buildServer() {
       ENV_CONFIG.CLIENT_ORIGIN,
       `http://localhost:${ENV_CONFIG.PORT}`,
       'http://127.0.0.1:5371',
+      'http://localhost:3000',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

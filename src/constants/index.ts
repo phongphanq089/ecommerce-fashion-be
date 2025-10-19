@@ -10,4 +10,4 @@ export const ALLOW_COMMOM_FILE_TYPES_GALLERY = [
   'image/webp',
 ];
 
-export const DEFAULT_FOLDER_NAME = 'All Files';
+export const DEFAULT_FOLDER_NAME = 'Default Folder';
