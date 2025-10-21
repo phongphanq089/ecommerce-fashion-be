@@ -36,6 +36,7 @@ export function buildServer() {
       `http://localhost:${ENV_CONFIG.PORT}`,
       'http://127.0.0.1:5371',
       'http://localhost:3000',
+      'https://ecommerce-fashion-fe.vercel.app',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
