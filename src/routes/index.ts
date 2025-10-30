@@ -1,6 +1,6 @@
 import logRoute from '@/modules/log/log.route';
 import mediaRoutes from '@/modules/media-file/media.route';
-import { mediaFolderRoutes } from '@/modules/media-folder/media-folder.route';
+import { mediaFolderRoutes } from '@/modules/media-folder/mediaFolder.route';
 import userRoutes from '@/modules/user/user.route';
 import { FastifyInstance } from 'fastify';
 

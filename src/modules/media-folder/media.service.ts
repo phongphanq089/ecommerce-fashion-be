@@ -1,9 +1,9 @@
 import { AppError, ConflictError, NotFoundError } from '@/utils/errors';
-import { MediaFolderRepository } from './media.repository';
+import { MediaFolderRepository } from './mediaFolder.repository';
 import {
   MediaFolderInput,
   UpdateFolderInput,
-} from './schema/media-folder.schema';
+} from './schema/mediaFolder.schema';
 
 class MediaFolderService {
   private repo: MediaFolderRepository;

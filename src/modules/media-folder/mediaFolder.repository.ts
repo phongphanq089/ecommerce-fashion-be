@@ -2,7 +2,7 @@ import { prisma } from '@/plugins/prisma';
 import {
   MediaFolderInput,
   UpdateFolderInput,
-} from './schema/media-folder.schema';
+} from './schema/mediaFolder.schema';
 
 export class MediaFolderRepository {
   async create(data: MediaFolderInput) {

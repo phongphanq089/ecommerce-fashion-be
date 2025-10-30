@@ -6,31 +6,6 @@
     "auditLog": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\.b231576b60fa8ccb152bb7f20076a754b3e8f736-audit.json",
     "files": [
         {
-            "date": 1758715740650,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-24.log",
-            "hash": "f774a49f62327f51fef68168664550ac64a2f49f27419a7120251b8f548f6d50"
-        },
-        {
-            "date": 1758769118202,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-25.log",
-            "hash": "84e591f7dfc32c98ce5441854034e9e19c79fdeb37fc9c3ae2ec1819818eb92b"
-        },
-        {
-            "date": 1758858547102,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-26.log",
-            "hash": "cbc7622215d34275fdcd75b600a978631519d89dda45f0bd25bab78def545e64"
-        },
-        {
-            "date": 1759114102133,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-29.log",
-            "hash": "b4924a285426f79b27d9c47f21cd75521c0f499667484ac20271ec6b1ea74fed"
-        },
-        {
-            "date": 1759199972733,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-09-30.log",
-            "hash": "17e2e56a8fbe20c0073e8022a56ea4a8839f60eeda39c25ea9cd71a4bbfd1cfc"
-        },
-        {
             "date": 1759287603022,
             "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-10-01.log",
             "hash": "5c46c400cffeb9392f0376bf2ecd94ba8c1a40bcb08b3cd1fbfdbb5ac57d73c3"
@@ -79,6 +54,11 @@
             "date": 1761060421521,
             "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-10-21.log",
             "hash": "4f7229830b690facd43f07c847845a4c1fa0dee66873d06e77f3595bae5e3a97"
+        },
+        {
+            "date": 1761837956461,
+            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\error-2025-10-30.log",
+            "hash": "4efeef172a3cceceb6d71222e7059eae86382dfc742de6a13ea775df508a4cf0"
         }
     ],
     "hashType": "sha256"

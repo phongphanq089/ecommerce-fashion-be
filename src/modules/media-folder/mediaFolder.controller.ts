@@ -3,7 +3,7 @@ import {
   FolderIdInput,
   MediaFolderInput,
   UpdateFolderInput,
-} from './schema/media-folder.schema';
+} from './schema/mediaFolder.schema';
 import { sendResponseSuccess } from '@/utils/sendResponse';
 import { mediaFolderService } from './media.service';
 

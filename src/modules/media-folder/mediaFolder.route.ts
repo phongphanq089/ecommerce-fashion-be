@@ -1,14 +1,14 @@
 import { FastifyInstance } from 'fastify';
-import { mediaFolderController } from './media-folder.controller';
+import { mediaFolderController } from './mediaFolder.controller';
 import {
   MEDIA_FOLDER_DESCRIPTIONS,
   MEDIA_FOLDER_SUMMARIES,
   MEDIA_FOLDER_TAG,
-} from './media.docs';
+} from './mediaFolder.docs';
 import {
   mediaFolderSchema,
   updateFolderSchema,
-} from './schema/media-folder.schema';
+} from './schema/mediaFolder.schema';
 import { zodValidate } from '@/utils/zodValidate';
 
 export const mediaFolderRoutes = (fastify: FastifyInstance) => {
