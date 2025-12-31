@@ -5,7 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "dev": "ts-node-dev --respawn --clear --transpile-only -r tsconfig-paths/register src/server.ts",
-    "build": "tsc",
+    "build": "npx prisma generate && tsc",
     "start": "node -r tsconfig-paths/register dist/server.js",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
