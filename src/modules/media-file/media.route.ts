@@ -7,6 +7,8 @@ import {
   // deleteMediaSchema,
 } from './schema/media.schema';
 import { zodValidate } from '@/utils/zodValidate';
+import { routeWithZod } from '@/utils/routeWithZod';
+import { mediaCreateSchema } from '@/db/schema.types';
 /**
  * Media Routes
  * -------------
@@ -23,152 +25,149 @@ import { zodValidate } from '@/utils/zodValidate';
  * - Schema Swagger chỉ dùng để mô tả request/response (API docs).
  */
 export default function mediaRoutes(fastify: FastifyInstance) {
-  (fastify.post('/upload', {
-    schema: {
-      summary: MEDIA_SUMMARIES.UPLOAD_FILE_SINGLE,
+  const controller = mediaController(fastify);
+
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/create',
+    disableValidator: true,
+    swaggerSchema: {
       tags: [MEDIA_TAG],
+      summary: MEDIA_SUMMARIES.UPLOAD_FILE_SINGLE,
       description: MEDIA_DESCRIPTIONS.UPLOAD_FILE_SINGLE,
       consumes: ['multipart/form-data'],
       querystring: {
         type: 'object',
         properties: {
-          folderId: {
-            type: 'string',
-            format: 'uuid',
-          },
+          folderId: { type: 'string', format: 'uuid' },
         },
       },
       body: {
         type: 'object',
         required: ['file'],
         properties: {
-          file: {
-            type: 'string',
-            format: 'binary',
-          },
+          file: { type: 'string', format: 'binary' },
         },
       },
-    },
-    validatorCompiler: ({ schema }) => {
-      return (data: any) => true;
     },
     preHandler: [fileUploadMiddleware.single],
-    handler: mediaController.createMediaSingle,
-  }),
-    fastify.post('/uploads', {
-      schema: {
-        summary: MEDIA_SUMMARIES.UPLOAD_FILE_MULTIPLE,
-        tags: [MEDIA_TAG],
-        description: MEDIA_DESCRIPTIONS.UPLOAD_FILE_MULTIPLE,
-        consumes: ['multipart/form-data'],
-        querystring: {
-          type: 'object',
-          properties: {
-            folderId: {
-              type: 'string',
-              format: 'uuid',
-            },
-          },
-        },
-        body: {
-          type: 'object',
-          required: ['files'],
-          properties: {
-            files: {
-              type: 'array',
-              items: {
-                type: 'string',
-                format: 'binary',
-              },
-            },
-          },
-        },
-      },
-      validatorCompiler: ({ schema }) => {
-        return (data: any) => true;
-      },
-      preHandler: [fileUploadMiddleware.multiple],
-      handler: mediaController.createMediaMultiple,
-    }),
-    fastify.get('/getMedia', {
-      schema: {
-        summary: MEDIA_SUMMARIES.GET_MEDIA,
-        tags: [MEDIA_TAG],
-        description: MEDIA_DESCRIPTIONS.GET_MEDIA,
-        querystring: {
-          type: 'object',
-          properties: {
-            folderId: {
-              type: 'string',
-              format: 'uuid',
-              description: 'Filter media by folder ID',
-            },
-            page: {
-              type: 'integer',
-              minimum: 1,
-              default: 1,
-              description: 'Page number for pagination',
-            },
-            limit: {
-              type: 'integer',
-              minimum: 1,
-              maximum: 100,
-              default: 20,
-              description: 'Number of items per page',
-            },
-          },
-        },
-      },
-      validatorCompiler: ({ schema }) => {
-        return (data: any) => true;
-      },
-      handler: mediaController.getMedia,
-    }),
-    fastify.delete('/media-delete-single/:id', {
-      schema: {
-        summary: MEDIA_SUMMARIES.DELETE_SINGLE,
-        tags: [MEDIA_TAG],
-        description: MEDIA_DESCRIPTIONS.DELETE_SINGLE,
-        querys: {
-          type: 'object',
-          required: ['Id'],
-          properties: {
-            Id: {
-              type: 'string',
-              format: 'uuid',
-            },
-          },
-        },
-      },
-      validatorCompiler: ({ schema }) => {
-        return (data: any) => true;
-      },
-      // preHandler: [zodValidate(deleteMediaSchema)],
-      handler: mediaController.deleteMediaSingle,
-    }),
-    fastify.post('/media-delete-multiple', {
-      schema: {
-        summary: MEDIA_SUMMARIES.DELETE_MULTIPLE,
-        tags: [MEDIA_TAG],
-        description: MEDIA_DESCRIPTIONS.DELETE_MULTIPLE,
-        body: {
-          type: 'object',
-          required: ['Ids'],
-          properties: {
-            Ids: {
-              type: 'array',
-              items: {
-                type: 'string',
-                format: 'uuid',
-              },
-            },
-          },
-        },
-      },
-      validatorCompiler: ({ schema }) => {
-        return (data: any) => true;
-      },
-      preHandler: [zodValidate(deleteMediaMultipleSchema)],
-      handler: mediaController.deleteMediaMultiple,
-    }));
+    handler: controller.createMediaSingle,
+  });
 }
+
+// fastify.post('/uploads', {
+//     schema: {
+//       summary: MEDIA_SUMMARIES.UPLOAD_FILE_MULTIPLE,
+//       tags: [MEDIA_TAG],
+//       description: MEDIA_DESCRIPTIONS.UPLOAD_FILE_MULTIPLE,
+//       consumes: ['multipart/form-data'],
+//       querystring: {
+//         type: 'object',
+//         properties: {
+//           folderId: {
+//             type: 'string',
+//             format: 'uuid',
+//           },
+//         },
+//       },
+//       body: {
+//         type: 'object',
+//         required: ['files'],
+//         properties: {
+//           files: {
+//             type: 'array',
+//             items: {
+//               type: 'string',
+//               format: 'binary',
+//             },
+//           },
+//         },
+//       },
+//     },
+//     validatorCompiler: ({ schema }) => {
+//       return (data: any) => true;
+//     },
+//     preHandler: [fileUploadMiddleware.multiple],
+//     handler: mediaController.createMediaMultiple,
+//   }),
+//   fastify.get('/getMedia', {
+//     schema: {
+//       summary: MEDIA_SUMMARIES.GET_MEDIA,
+//       tags: [MEDIA_TAG],
+//       description: MEDIA_DESCRIPTIONS.GET_MEDIA,
+//       querystring: {
+//         type: 'object',
+//         properties: {
+//           folderId: {
+//             type: 'string',
+//             format: 'uuid',
+//             description: 'Filter media by folder ID',
+//           },
+//           page: {
+//             type: 'integer',
+//             minimum: 1,
+//             default: 1,
+//             description: 'Page number for pagination',
+//           },
+//           limit: {
+//             type: 'integer',
+//             minimum: 1,
+//             maximum: 100,
+//             default: 20,
+//             description: 'Number of items per page',
+//           },
+//         },
+//       },
+//     },
+//     validatorCompiler: ({ schema }) => {
+//       return (data: any) => true;
+//     },
+//     handler: mediaController.getMedia,
+//   }),
+//   fastify.delete('/media-delete-single/:id', {
+//     schema: {
+//       summary: MEDIA_SUMMARIES.DELETE_SINGLE,
+//       tags: [MEDIA_TAG],
+//       description: MEDIA_DESCRIPTIONS.DELETE_SINGLE,
+//       querys: {
+//         type: 'object',
+//         required: ['Id'],
+//         properties: {
+//           Id: {
+//             type: 'string',
+//             format: 'uuid',
+//           },
+//         },
+//       },
+//     },
+//     validatorCompiler: ({ schema }) => {
+//       return (data: any) => true;
+//     },
+//     // preHandler: [zodValidate(deleteMediaSchema)],
+//     handler: mediaController.deleteMediaSingle,
+//   }),
+//   fastify.post('/media-delete-multiple', {
+//     schema: {
+//       summary: MEDIA_SUMMARIES.DELETE_MULTIPLE,
+//       tags: [MEDIA_TAG],
+//       description: MEDIA_DESCRIPTIONS.DELETE_MULTIPLE,
+//       body: {
+//         type: 'object',
+//         required: ['Ids'],
+//         properties: {
+//           Ids: {
+//             type: 'array',
+//             items: {
+//               type: 'string',
+//               format: 'uuid',
+//             },
+//           },
+//         },
+//       },
+//     },
+//     validatorCompiler: ({ schema }) => {
+//       return (data: any) => true;
+//     },
+//     preHandler: [zodValidate(deleteMediaMultipleSchema)],
+//     handler: mediaController.deleteMediaMultiple,
+//   }));

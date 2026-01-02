@@ -4,6 +4,8 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { logger } from '@/utils/logger';
 import { AppError, ValidationError } from '@/utils/errors';
 import * as Sentry from '@sentry/node';
+import { ZodError } from 'zod';
+import { fromZodError } from 'zod-validation-error';
 
 /**
  * Plugin xử lý lỗi toàn cục cho Fastify
@@ -13,31 +15,44 @@ import * as Sentry from '@sentry/node';
  * - Cho phép chia sẻ context giữa các plugin khác.
  * - Đảm bảo plugin được load đúng thời điểm (trước routes, hooks, decorators...).
  */
+// src/plugins/zodErrorHandlerPlugin.ts
+
 export const zodErrorHandlerPlugin = fp(async (fastify: FastifyInstance) => {
   fastify.setErrorHandler(
-    (error: any, request: FastifyRequest, reply: FastifyReply) => {
-      /**
-       * 1. Xử lý lỗi validation mặc định của Fastify
-       * - Khi schema validation (AJV) bị fail, error sẽ có thuộc tính `validation`.
-       * - Ta gom lỗi lại theo từng field để trả về dạng dễ đọc cho FE.
-       */
+    async (error: any, request: FastifyRequest, reply: FastifyReply) => {
+      // 1. Zod validation error (từ zodValidate)
+      if (error instanceof ZodError) {
+        const validationError = fromZodError(error);
+        logger.warn('Zod validation error', {
+          url: request.url,
+          method: request.method,
+          errors: validationError.details,
+        });
+
+        return reply.status(400).send({
+          success: false,
+          message: 'Validation failed',
+          errors: Object.fromEntries(
+            error.issues.map((issue) => [issue.path.join('.'), issue.message])
+          ),
+        });
+      }
+
+      // 2. Fastify validation error (AJV - nếu còn dùng ở đâu đó)
       if (error.validation) {
         const formattedErrors: Record<string, string[]> = {};
-
         for (const err of error.validation) {
-          // Lấy tên field từ instancePath (vd: "/email" -> "email")
-          const field = err.instancePath.substring(1);
-
-          // Gom lỗi theo field (mỗi field là 1 mảng lỗi)
-          if (!formattedErrors[field]) {
-            formattedErrors[field] = [];
-          }
-          formattedErrors[field].push(err.message);
+          const field =
+            err.instancePath.substring(1) ||
+            err.params?.missingProperty ||
+            'general';
+          if (!formattedErrors[field]) formattedErrors[field] = [];
+          formattedErrors[field].push(err.message ?? 'Invalid');
         }
 
-        logger.error('Validation error:', {
-          errors: error.validation, // log chi tiết lỗi để debug
+        logger.warn('AJV validation error', {
           url: request.url,
+          errors: formattedErrors,
         });
 
         return reply.status(400).send({
@@ -47,10 +62,28 @@ export const zodErrorHandlerPlugin = fp(async (fastify: FastifyInstance) => {
         });
       }
 
-      /**
-       * 2. Xử lý lỗi custom AppError (bao gồm ValidationError riêng của app)
-       */
+      // 3. Fastify built-in errors (multipart, payload too large, etc.)
+      if (error.statusCode && error.statusCode < 500 && error.message) {
+        // Các lỗi 4xx từ Fastify: file too large, no file, bad request...
+        logger.warn('Fastify client error', {
+          statusCode: error.statusCode,
+          message: error.message,
+          url: request.url,
+        });
+
+        return reply.status(error.statusCode).send({
+          success: false,
+          message: error.message || 'Bad request',
+        });
+      }
+
+      // 4. Custom AppError
       if (error instanceof AppError) {
+        logger.warn('AppError', {
+          message: error.message,
+          statusCode: error.statusCode,
+        });
+
         return reply.status(error.statusCode).send({
           success: false,
           message: error.message,
@@ -58,16 +91,21 @@ export const zodErrorHandlerPlugin = fp(async (fastify: FastifyInstance) => {
         });
       }
 
-      /**
-       * 3. Xử lý fallback cho các lỗi không xác định
-       */
-      logger.error('Unexpected error:', error);
-      console.error('🔥🔥🔥 Lỗi chưa xác định:', error);
+      // 5. Tất cả lỗi khác → 500 (server error thật sự)
+      logger.error('Unexpected server error', {
+        error,
+        stack: error.stack,
+        url: request.url,
+        method: request.method,
+        body: request.body,
+      });
+      console.error('🔥 Server Error:', error);
 
-      // Gửi lỗi đến Sentry để nhận cảnh báo
-      if (error.statusCode >= 500 || !error.isOperational) {
-        Sentry.logger.error('User triggered test log', { action: 'test_log' });
-      }
+      // Gửi đến Sentry
+      Sentry.captureException(error, {
+        tags: { route: request.url },
+        extra: { body: request.body, query: request.query },
+      });
 
       return reply.status(500).send({
         success: false,

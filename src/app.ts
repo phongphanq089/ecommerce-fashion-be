@@ -12,6 +12,7 @@ import fastifyCors from '@fastify/cors';
 import { zodErrorHandlerPlugin } from './middleware/zodErrorHandlerPlugin';
 import * as Sentry from '@sentry/node';
 import multipart from '@fastify/multipart';
+import databasePlugin from './plugins/database';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
@@ -36,11 +37,14 @@ export function buildServer() {
       `http://localhost:${ENV_CONFIG.PORT}`,
       'http://127.0.0.1:5371',
       'http://localhost:3000',
+      'http://127.0.0.1:3000',
       'https://ecommerce-fashion-fe.vercel.app',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   });
+
+  server.register(databasePlugin);
 
   // Thêm validator và serializer của Zod
   server.setValidatorCompiler(validatorCompiler);

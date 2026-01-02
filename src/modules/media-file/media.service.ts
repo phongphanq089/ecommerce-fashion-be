@@ -23,8 +23,8 @@ import { CreateMediaDTO, MultiFileData } from './schema/type';
 class MediaService {
   private repo: MediaRepository;
 
-  constructor() {
-    this.repo = new MediaRepository();
+  constructor(repo: MediaRepository) {
+    this.repo = repo;
   }
   /**
    * @private
@@ -177,8 +177,10 @@ class MediaService {
     if (!media?.fileId)
       throw new AppError('Media record is corrupted: fileId is missing', 500);
 
+    //await this.repo.deleteMediaSingle(data.Id);
     await this.repo.deleteMediaSingle(data.Id);
 
+    //// Sau đó xóa file trên ImageKit (nếu fail thì log, không throw)
     await handleExternalCall(
       () => uploadImageKitProvider.deleteFile(media.fileId as string),
       {
@@ -237,10 +239,10 @@ class MediaService {
     }
 
     return {
-      count: deleteResult.count,
-      message: `${deleteResult.count} media item(s) deleted successfully.`,
+      count: deleteResult,
+      message: `${deleteResult} media item(s) deleted successfully.`,
     };
   }
 }
 
-export const mediaService = new MediaService();
+export const mediaService = (repo: MediaRepository) => new MediaService(repo);
