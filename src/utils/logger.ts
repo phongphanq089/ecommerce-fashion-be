@@ -1,45 +1,38 @@
 import winston from 'winston';
-import 'winston-daily-rotate-file';
-import path from 'path';
 import { ENV_CONFIG } from '@/config/env';
 
-const logDir = path.resolve('logs');
+// Định nghĩa format cho môi trường Development (dễ đọc)
+const devFormat = winston.format.combine(
+  winston.format.colorize(),
+  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+  winston.format.errors({ stack: true }),
+  winston.format.printf(({ timestamp, level, message, stack }) => {
+    return `[${timestamp}] ${level}: ${message} ${stack ? `\n${stack}` : ''}`;
+  })
+);
 
-const transportAll = new winston.transports.DailyRotateFile({
-  filename: path.join(logDir, 'combined-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: false,
-  maxSize: '5m',
-  maxFiles: '14d',
-  level: 'info',
-});
-
-const transportError = new winston.transports.DailyRotateFile({
-  filename: path.join(logDir, 'error-%DATE%.log'),
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: false,
-  maxSize: '5m',
-  maxFiles: '30d',
-  level: 'error',
-});
+// Định nghĩa format cho môi trường Production (JSON để máy dễ đọc/phân tích)
+const prodFormat = winston.format.combine(
+  winston.format.timestamp(),
+  winston.format.errors({ stack: true }),
+  winston.format.json()
+);
 
 export const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  transports: [transportAll, transportError],
+  level: ENV_CONFIG.IS_PRODUCTION ? 'info' : 'debug',
+  format: ENV_CONFIG.IS_PRODUCTION ? prodFormat : devFormat,
+  transports: [
+    // Luôn luôn ghi ra Console. Trên Cloud, Console chính là nơi Render lấy Log.
+    new winston.transports.Console(),
+  ],
 });
 
-if (ENV_CONFIG.NODE_ENV === 'development') {
+// Chỉ ghi ra file nếu đang ở môi trường Local (Development) nếu bạn thực sự muốn
+if (ENV_CONFIG.IS_DEVELOPMENT) {
   logger.add(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
+    new winston.transports.File({
+      filename: 'logs/dev-error.log',
+      level: 'error',
     })
   );
 }

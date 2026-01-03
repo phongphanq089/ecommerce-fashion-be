@@ -1,41 +1,85 @@
 import dotenv from 'dotenv';
+import { z } from 'zod';
 
 dotenv.config();
 
+const envSchema = z.object({
+  // --- Server Configuration ---
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
+  PORT: z.coerce.number().default(3000),
+  HOST: z.string().default('127.0.0.1'),
+
+  // --- Database ---
+  DATABASE_URL: z.string().min(1, 'Database URL is required'),
+
+  // --- URLs ---
+  SENTRY_URL: z
+    .string()
+    .url('Invalid Sentry URL format')
+    .optional()
+    .or(z.literal('')),
+  CLIENT_ORIGIN: z.string().url('CLIENT_ORIGIN must be a valid URL'),
+  SERVER_URL: z.string().url('SERVER_URL must be a valid URL'),
+  CLIENT_URL: z.string().url('CLIENT_URL must be a valid URL'),
+
+  // --- Auth / JWT ---
+  ACCESS_TOKEN_SECRET_SIGNATURE: z
+    .string()
+    .min(1, 'Access token secret is required'),
+  ACCESS_TOKEN_LIFE: z
+    .string()
+    .regex(/^\d+[mhd]$/, "Format must be like '1h', '7d', or '30m'"),
+
+  REFRESH_TOKEN_SECRET_SIGNATURE: z
+    .string()
+    .min(1, 'Refresh token secret is required'),
+  REFRESH_TOKEN_LIFE: z
+    .string()
+    .regex(/^\d+[mhd]$/, "Format must be like '1h', '7d', or '30m'"),
+
+  BCRYPT_ROUNDS: z.coerce.number().default(10),
+
+  // --- Mail Service (Brevo) ---
+  BREVO_API_KEY: z.string().min(1, 'Brevo API key is required'),
+  ADMIN_EMAIL_ADDRESS: z.string().email('Invalid admin email address'),
+  ADMIN_EMAIL_NAME: z.string().min(1, 'Admin email name is required'),
+
+  // --- Security ---
+  COOKIE_SECRET: z.string().min(1, 'Cookie secret is required'),
+
+  // --- Image Hosting (ImageKit) ---
+  IMAGE_KIT_PUBLIC_KEY: z.string().min(1, 'ImageKit public key is required'),
+  IMAGE_KIT_PRIVATE_KEY: z.string().min(1, 'ImageKit private key is required'),
+  IMAGE_KIT_URLENDOINT: z.string().url('ImageKit endpoint must be a valid URL'),
+});
+
+// Parse and Validate
+const _env = envSchema.safeParse(process.env);
+
+if (!_env.success) {
+  console.error('❌ Invalid environment variables:');
+
+  // Clean error reporting
+  _env.error.issues.forEach((issue) => {
+    console.error(`   - [${issue.path.join('.')}] : ${issue.message}`);
+  });
+
+  process.exit(1);
+}
+
+const envData = _env.data;
+
 export const ENV_CONFIG = {
-  PORT: parseInt(process.env.PORT || '3000', 10),
-  HOST: process.env.HOST || '127.0.0.1',
-  NODE_ENV: process.env.NODE_ENV || 'development',
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN || '',
-  SERVER_URL: process.env.SERVER_URL || '',
-  CLIENT_URL: process.env.CLIENT_URL || '',
+  ...envData,
+  IS_DEVELOPMENT: envData.NODE_ENV === 'development',
+  IS_PRODUCTION: envData.NODE_ENV === 'production',
 
-  IS_DEVELOPMENT: process.env.NODE_ENV === 'development',
-  IS_PRODUCTION: process.env.NODE_ENV === 'production',
-  // ===== JWT  =============//
-  ACCESS_TOKEN_SECRET_SIGNATURE:
-    process.env.ACCESS_TOKEN_SECRET_SIGNATURE || '',
-  ACCESS_TOKEN_LIFE: process.env.ACCESS_TOKEN_LIFE as `${number}${
-    | 'm'
-    | 'h'
-    | 'd'}`,
-  REFRESH_TOKEN_SECRET_SIGNATURE:
-    process.env.REFRESH_TOKEN_SECRET_SIGNATURE || '',
-  REFRESH_TOKEN_LIFE: process.env.REFRESH_TOKEN_LIFE as `${number}${
-    | 'm'
-    | 'h'
-    | 'd'}`,
-  BCRYPT_ROUNDS: process.env.BCRYPT_ROUNDS || '',
-  //========================//
+  // Strict typing for Token Life
+  ACCESS_TOKEN_LIFE: envData.ACCESS_TOKEN_LIFE as `${number}${'m' | 'h' | 'd'}`,
+  REFRESH_TOKEN_LIFE:
+    envData.REFRESH_TOKEN_LIFE as `${number}${'m' | 'h' | 'd'}`,
+} as const;
 
-  //========= KEY SEND MAIL =========//
-  BREVO_API_KEY: process.env.BREVO_API_KEY || '',
-  ADMIN_EMAIL_ADDRESS: process.env.ADMIN_EMAIL_ADDRESS || '',
-  ADMIN_EMAIL_NAME: process.env.ADMIN_EMAIL_NAME || '',
-  //====== cookie ======================//
-  COOKIE_SECRET: process.env.COOKIE_SECRET,
-  // ======== IMAGEKIT ======================//
-  IMAGE_KIT_PUBLIC_KEY: process.env.IMAGE_KIT_PUBLIC_KEY || '',
-  IMAGE_KIT_PRIVATE_KEY: process.env.IMAGE_KIT_PRIVATE_KEY || '',
-  IMAGE_KIT_URLENDOINT: process.env.IMAGE_KIT_URLENDOINT || '',
-};
+export type EnvConfig = z.infer<typeof envSchema>;
