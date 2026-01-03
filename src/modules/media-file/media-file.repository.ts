@@ -1,6 +1,4 @@
 import { Database } from '@/plugins/database';
-import { prisma } from '@/plugins/prisma';
-import { Media, Prisma } from '@prisma/client';
 import { eq, count, inArray } from 'drizzle-orm';
 import * as schema from '@/db/schema';
 
@@ -51,7 +49,7 @@ export class MediaRepository {
   }
   /**
    * Tạo một bản ghi Media
-   * @param data - dữ liệu media (dùng Prisma.MediaUncheckedCreateInput)
+   * @param data - dữ liệu media
    * @returns Media đã được tạo kèm folder
    */
   async createMedia(data: typeof schema.media.$inferInsert) {
@@ -160,6 +158,10 @@ export class MediaRepository {
    */
   async deleteMediaMultiple(ids: string[]) {
     if (ids.length === 0) return { count: 0 };
-    return this.db.delete(schema.media).where(inArray(schema.media.id, ids));
+    const deletedRows = await this.db
+      .delete(schema.media)
+      .where(inArray(schema.media.id, ids))
+      .returning();
+    return { count: deletedRows.length };
   }
 }

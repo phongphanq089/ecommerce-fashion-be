@@ -31,15 +31,15 @@ export function buildServer() {
   });
 
   // ==== CORS ====  //
+
+  const allowedOrigins = [
+    ENV_CONFIG.CLIENT_ORIGIN,
+    ENV_CONFIG.CLIENT_URL,
+    'https://ecommerce-fashion-fe.vercel.app',
+  ].filter(Boolean);
+
   server.register(fastifyCors, {
-    origin: [
-      ENV_CONFIG.CLIENT_ORIGIN,
-      `http://localhost:${ENV_CONFIG.PORT}`,
-      'http://127.0.0.1:5371',
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'https://ecommerce-fashion-fe.vercel.app',
-    ],
+    origin: ENV_CONFIG.IS_DEVELOPMENT ? true : allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   });

@@ -1,18 +1,17 @@
 // mediaFolder.routes.ts
 import { FastifyInstance } from 'fastify';
-import { mediaFolderController } from './mediaFolder.controller';
+import z from 'zod';
+import { mediaFolderController } from './media-folder.controller';
 import {
   MEDIA_FOLDER_DESCRIPTIONS,
   MEDIA_FOLDER_SUMMARIES,
   MEDIA_FOLDER_TAG,
-} from './mediaFolder.docs';
-
+} from './media-folder.docs';
 import { routeWithZod } from '@/utils/routeWithZod';
 import {
   mediaFolderCreateSchema,
   mediaFolderUpdateSchema,
-} from '@/db/schema.types';
-import z from 'zod';
+} from './media-folder.validation';
 
 export const mediaFolderRoutes = (fastify: FastifyInstance) => {
   const controller = mediaFolderController(fastify);
@@ -21,6 +20,7 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
   routeWithZod(fastify, {
     method: 'post',
     url: '/create',
+    disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.CREATE,
@@ -39,8 +39,10 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
   });
 
   // GET /folder-getAll
-  fastify.get('/folder-getAll', {
-    schema: {
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/folder-getAll',
+    swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.GET_ALL,
       description: MEDIA_FOLDER_DESCRIPTIONS.GET_ALL,
@@ -52,6 +54,7 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
   routeWithZod(fastify, {
     method: 'put',
     url: '/folder-update',
+    disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.UPDATE,
@@ -72,6 +75,7 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
   routeWithZod(fastify, {
     method: 'delete',
     url: '/delete/:id',
+    disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.DELETE,
@@ -87,6 +91,7 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
     paramsSchema: z.object({
       id: z.string().uuid(),
     }),
+
     handler: controller.deleteHandler,
   });
 };

@@ -8,13 +8,10 @@ import {
   integer,
   pgEnum,
   primaryKey,
-  foreignKey,
   index,
-  AnyPgColumn,
   unique,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { createId } from '@paralleldrive/cuid2';
 
 const cuid = createId;

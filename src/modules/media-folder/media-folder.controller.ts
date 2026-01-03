@@ -4,8 +4,8 @@ import {
   UpdateFolderInput,
 } from './schema/mediaFolder.schema';
 import { sendResponseSuccess } from '@/utils/sendResponse';
-import { mediaFolderService } from './media.service';
-import { MediaFolderRepository } from './mediaFolder.repository';
+import { mediaFolderService } from './media-folder.service';
+import { MediaFolderRepository } from './media-folder.repository';
 
 export const mediaFolderController = (fastify: FastifyInstance) => {
   // Tạo repo và service trong controller (truyền fastify.db)

@@ -1,12 +1,12 @@
 import { sendResponseError, sendResponseSuccess } from '@/utils/sendResponse';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fs from 'fs/promises';
-import { mediaService } from './media.service';
+import { mediaService } from './media-file.service';
+import { MediaRepository } from './media-file.repository';
 import {
-  DeleteMediaTypeMultipleInput,
-  DeleteMediaTypeSigleInput,
-} from './schema/media.schema';
-import { MediaRepository } from './media.repository';
+  DeleteMediaMultipleInput,
+  DeleteMediaSingleInput,
+} from './media-file.validation';
 
 export const mediaController = (fastify: FastifyInstance) => {
   const repo = new MediaRepository(fastify.db);
@@ -97,14 +97,17 @@ export const mediaController = (fastify: FastifyInstance) => {
       return sendResponseSuccess(201, reply, 'Get List media success', data);
     },
     deleteMediaSingle: async (
-      req: FastifyRequest<{ Params: { id: string } }>,
+      req: FastifyRequest<{ Body?: DeleteMediaSingleInput }>,
       reply: FastifyReply
     ) => {
-      const param = {
-        Id: req.params.id,
+      const body = {
+        Id: req.body?.Id,
       };
+      if (!body.Id) {
+        return sendResponseError(400, reply, 'No id provided', null);
+      }
       const result = await service.deleteMediaSingle(
-        param as DeleteMediaTypeSigleInput
+        body as DeleteMediaSingleInput
       );
       return reply.send({
         succes: true,
@@ -112,10 +115,19 @@ export const mediaController = (fastify: FastifyInstance) => {
         data: result,
       });
     },
-    deleteMediaMultiple: async (req: FastifyRequest, reply: FastifyReply) => {
-      const { Ids } = req.body as DeleteMediaTypeMultipleInput;
-
-      const result = await service.deleteMediaMutiple({ Ids });
+    deleteMediaMultiple: async (
+      req: FastifyRequest<{ Body?: DeleteMediaMultipleInput }>,
+      reply: FastifyReply
+    ) => {
+      const body = {
+        Ids: req.body?.Ids,
+      };
+      if (!body.Ids || !Array.isArray(body.Ids) || body.Ids.length === 0) {
+        return sendResponseError(400, reply, 'No ids provided', null);
+      }
+      const result = await service.deleteMediaMutiple(
+        body as DeleteMediaMultipleInput
+      );
 
       return reply.send({
         success: true,

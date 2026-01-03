@@ -1,5 +1,5 @@
 import { AppError, ConflictError, NotFoundError } from '@/utils/errors';
-import { MediaFolderRepository } from './mediaFolder.repository';
+import { MediaFolderRepository } from './media-folder.repository';
 import {
   MediaFolderInput,
   UpdateFolderInput,

@@ -1,20 +1,21 @@
-import { MediaType } from '@prisma/client';
+// MediaType matches the mediaTypeEnum values from schema.ts
+type MediaType = 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'OTHER';
 
 export function toMediaType(mimeType: string): MediaType {
-  if (!mimeType) return MediaType.OTHER;
+  if (!mimeType) return 'OTHER';
 
   const type = mimeType.split('/')[0];
 
   switch (type) {
     case 'image':
-      return MediaType.IMAGE;
+      return 'IMAGE';
     case 'video':
-      return MediaType.VIDEO;
+      return 'VIDEO';
     case 'application': {
-      if (mimeType.includes('pdf')) return MediaType.DOCUMENT;
-      return MediaType.DOCUMENT;
+      if (mimeType.includes('pdf')) return 'DOCUMENT';
+      return 'DOCUMENT';
     }
     default:
-      return MediaType.OTHER;
+      return 'OTHER';
   }
 }

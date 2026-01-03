@@ -1,4 +1,3 @@
-import { prisma } from '@/plugins/prisma';
 import { UpdateFolderInput } from './schema/mediaFolder.schema';
 import * as schema from '@/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -8,7 +7,7 @@ import {
   MediaFolderCreateInput,
   MediaFolderUpdateInput,
   MediaFolderWithRelations,
-} from '@/db/schema.types';
+} from './media-folder.validation';
 
 export class MediaFolderRepository {
   private db: Database;

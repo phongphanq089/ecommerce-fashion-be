@@ -31,7 +31,7 @@ export const LOGGER_CONSOLE = {
     );
 
     console.table({
-      'App Name': 'JWT-AUTHENTICATION-REACT-FASTIFY',
+      'App Name': 'E-COMMERCE',
       Environment: process.env.NODE_ENV || 'development',
       Host: ENV_CONFIG.HOST,
       Port: ENV_CONFIG.PORT,
