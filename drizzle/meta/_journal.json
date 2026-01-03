@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1767168826307,
+      "tag": "0000_yielding_satana",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767171933078,
+      "tag": "0001_solid_salo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767325734431,
+      "tag": "0002_last_silver_samurai",
+      "breakpoints": true
+    }
+  ]
+}

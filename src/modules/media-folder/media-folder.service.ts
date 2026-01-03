@@ -1,16 +1,17 @@
 import { AppError, ConflictError, NotFoundError } from '@/utils/errors';
-import { MediaFolderRepository } from './media.repository';
+import { MediaFolderRepository } from './media-folder.repository';
 import {
   MediaFolderInput,
   UpdateFolderInput,
-} from './schema/media-folder.schema';
+} from './schema/mediaFolder.schema';
 
-class MediaFolderService {
+export class mediaFolderService {
   private repo: MediaFolderRepository;
 
-  constructor() {
-    this.repo = new MediaFolderRepository();
+  constructor(repo: MediaFolderRepository) {
+    this.repo = repo;
   }
+
   async createFolder(data: MediaFolderInput) {
     // Business logic: Không cho tạo folder trùng tên trong cùng một cấp
     const existing = await this.repo.findByNameAndParent(
@@ -52,7 +53,7 @@ class MediaFolderService {
     if (!folder) {
       throw new NotFoundError('Folder not found');
     }
-    // Business logic: Chỉ cho phép xóa folder rỗng
+
     if (folder.media.length > 0 || folder.children.length > 0) {
       throw new AppError('Cannot delete a non-empty folder.', 400);
     }
@@ -61,4 +62,4 @@ class MediaFolderService {
   }
 }
 
-export const mediaFolderService = new MediaFolderService();
+// export const mediaFolderService = new MediaFolderService();

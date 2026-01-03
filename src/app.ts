@@ -12,15 +12,26 @@ import fastifyCors from '@fastify/cors';
 import { zodErrorHandlerPlugin } from './middleware/zodErrorHandlerPlugin';
 import * as Sentry from '@sentry/node';
 import multipart from '@fastify/multipart';
+import databasePlugin from './plugins/database';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
   const server = Fastify({
-    logger: ENV_CONFIG.NODE_ENV === 'development',
+    logger: {
+      transport: {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          translateTime: 'SYS:dd-mm-yyyy HH:MM:ss',
+          ignore: 'pid,hostname',
+        },
+      },
+      level: ENV_CONFIG.NODE_ENV === 'development' ? 'debug' : 'info',
+    },
   }).withTypeProvider<ZodTypeProvider>();
 
   Sentry.init({
-    dsn: 'https://058432d00eeeabe1802745fc31ce1ce5@o4510077958750208.ingest.de.sentry.io/4510077962420304',
+    dsn: ENV_CONFIG.SENTRY_URL || '',
     integrations: [
       // send console.log, console.warn, and console.error calls as logs to Sentry
       Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
@@ -30,17 +41,20 @@ export function buildServer() {
   });
 
   // ==== CORS ====  //
+
+  const allowedOrigins = [
+    ENV_CONFIG.CLIENT_ORIGIN,
+    ENV_CONFIG.CLIENT_URL,
+    'https://ecommerce-fashion-fe.vercel.app',
+  ].filter(Boolean);
+
   server.register(fastifyCors, {
-    origin: [
-      ENV_CONFIG.CLIENT_ORIGIN,
-      `http://localhost:${ENV_CONFIG.PORT}`,
-      'http://127.0.0.1:5371',
-      'http://localhost:3000',
-      'https://ecommerce-fashion-fe.vercel.app',
-    ],
+    origin: ENV_CONFIG.IS_DEVELOPMENT ? true : allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   });
+
+  server.register(databasePlugin);
 
   // Thêm validator và serializer của Zod
   server.setValidatorCompiler(validatorCompiler);
@@ -111,8 +125,8 @@ export function buildServer() {
         `🕒 Timestamp: ${new Date().toISOString()}`,
         '',
         '📌 Version : v1.0.0',
-        `📌 Base URL: http://localhost:${ENV_CONFIG.PORT}`,
-        `📌 Docs    : http://localhost:${ENV_CONFIG.PORT}/docs`,
+        `📌 Base URL: ${ENV_CONFIG.SERVER_URL}`,
+        `📌 Docs     : ${ENV_CONFIG.SERVER_URL}/docs`,
         '📌 Author  : Your Name',
         '📌 Repo    : https://github.com/your-repo/ecommerce-api',
         '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',

@@ -1,19 +1,27 @@
+// mediaFolder.routes.ts
 import { FastifyInstance } from 'fastify';
+import z from 'zod';
 import { mediaFolderController } from './media-folder.controller';
 import {
   MEDIA_FOLDER_DESCRIPTIONS,
   MEDIA_FOLDER_SUMMARIES,
   MEDIA_FOLDER_TAG,
-} from './media.docs';
+} from './media-folder.docs';
+import { routeWithZod } from '@/utils/routeWithZod';
 import {
-  mediaFolderSchema,
-  updateFolderSchema,
-} from './schema/media-folder.schema';
-import { zodValidate } from '@/utils/zodValidate';
+  mediaFolderCreateSchema,
+  mediaFolderUpdateSchema,
+} from './media-folder.validation';
 
 export const mediaFolderRoutes = (fastify: FastifyInstance) => {
-  fastify.post('/create', {
-    schema: {
+  const controller = mediaFolderController(fastify);
+
+  // POST /create
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/create',
+    disableValidator: true,
+    swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.CREATE,
       description: MEDIA_FOLDER_DESCRIPTIONS.CREATE,
@@ -21,77 +29,69 @@ export const mediaFolderRoutes = (fastify: FastifyInstance) => {
         type: 'object',
         required: ['name'],
         properties: {
-          name: {
-            type: 'string',
-            minimum: 1,
-          },
-          parentId: {
-            type: 'string',
-            format: 'uuid',
-          },
+          name: { type: 'string' },
+          parentId: { type: 'string', format: 'uuid', nullable: true },
         },
       },
     },
-    validatorCompiler: ({ schema }) => {
-      return (data: any) => true;
-    },
-    preHandler: [zodValidate(mediaFolderSchema)],
-    handler: mediaFolderController.createHandler,
+    bodySchema: mediaFolderCreateSchema,
+    handler: controller.createHandler,
   });
-  fastify.get('/folder-getAll', {
-    schema: {
+
+  // GET /folder-getAll
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/folder-getAll',
+    swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.GET_ALL,
       description: MEDIA_FOLDER_DESCRIPTIONS.GET_ALL,
     },
-    handler: mediaFolderController.getAllHandler,
+    handler: controller.getAllHandler,
   });
-  fastify.put('/folder-update', {
-    schema: {
+
+  // PUT /folder-update
+  routeWithZod(fastify, {
+    method: 'put',
+    url: '/folder-update',
+    disableValidator: true,
+    swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.UPDATE,
       description: MEDIA_FOLDER_DESCRIPTIONS.UPDATE,
       body: {
         type: 'object',
-        required: ['name', 'id'],
+        required: ['id', 'name'],
         properties: {
-          id: {
-            type: 'string',
-            format: 'uuid',
-          },
-          name: {
-            type: 'string',
-            minimum: 1,
-          },
+          id: { type: 'string', format: 'uuid' },
+          name: { type: 'string' },
         },
       },
     },
-    validatorCompiler: ({ schema }) => {
-      return (data: any) => true;
-    },
-    preHandler: [zodValidate(updateFolderSchema)],
-    handler: mediaFolderController.updateHandler,
+    bodySchema: mediaFolderUpdateSchema,
+    handler: controller.updateHandler,
   });
-  fastify.delete('/delete/:id', {
-    schema: {
+
+  routeWithZod(fastify, {
+    method: 'delete',
+    url: '/delete/:id',
+    disableValidator: true,
+    swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
       summary: MEDIA_FOLDER_SUMMARIES.DELETE,
       description: MEDIA_FOLDER_DESCRIPTIONS.DELETE,
-      querys: {
+      params: {
         type: 'object',
         required: ['id'],
         properties: {
-          id: {
-            type: 'string',
-            format: 'uuid',
-          },
+          id: { type: 'string', format: 'uuid' },
         },
       },
     },
-    validatorCompiler: ({ schema }) => {
-      return (data: any) => true;
-    },
-    // preHandler: [zodValidate(folderIdSchema)],
-    handler: mediaFolderController.deleteHandler,
+    paramsSchema: z.object({
+      id: z.string().uuid(),
+    }),
+
+    handler: controller.deleteHandler,
   });
 };

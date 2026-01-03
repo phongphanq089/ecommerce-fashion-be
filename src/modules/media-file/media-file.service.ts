@@ -1,15 +1,17 @@
 import { AppError, NotFoundError } from '@/utils/errors';
 import { uploadImageKitProvider } from '@/provider/uploadImageKitProvider';
-import {
-  DeleteMediaTypeMultipleInput,
-  DeleteMediaTypeSigleInput,
-} from './schema/media.schema';
-import { MediaRepository } from './media.repository';
+
+import { MediaRepository } from './media-file.repository';
 import fs from 'fs/promises';
 import { handleExternalCall } from '@/utils/handleExternalCall';
 import { toMediaType } from '@/utils/lib';
 import { DEFAULT_FOLDER_NAME } from '@/constants';
-import { CreateMediaDTO, MultiFileData } from './schema/type';
+import {
+  CreateMediaDTO,
+  DeleteMediaMultipleInput,
+  DeleteMediaSingleInput,
+  MultiFileData,
+} from './media-file.validation';
 
 /**
  * MediaService
@@ -23,8 +25,8 @@ import { CreateMediaDTO, MultiFileData } from './schema/type';
 class MediaService {
   private repo: MediaRepository;
 
-  constructor() {
-    this.repo = new MediaRepository();
+  constructor(repo: MediaRepository) {
+    this.repo = repo;
   }
   /**
    * @private
@@ -169,7 +171,7 @@ class MediaService {
    * @param data { Id: string } - ID media cần xoá
    * @returns ID media đã xoá
    */
-  async deleteMediaSingle(data: DeleteMediaTypeSigleInput) {
+  async deleteMediaSingle(data: DeleteMediaSingleInput) {
     const media = await this.repo.findUniqueMedia(data.Id);
 
     if (!media) throw new NotFoundError('Media not found');
@@ -177,8 +179,10 @@ class MediaService {
     if (!media?.fileId)
       throw new AppError('Media record is corrupted: fileId is missing', 500);
 
+    //await this.repo.deleteMediaSingle(data.Id);
     await this.repo.deleteMediaSingle(data.Id);
 
+    //// Sau đó xóa file trên ImageKit (nếu fail thì log, không throw)
     await handleExternalCall(
       () => uploadImageKitProvider.deleteFile(media.fileId as string),
       {
@@ -203,7 +207,7 @@ class MediaService {
    * @param data { Ids: string[] } - Danh sách ID media cần xoá
    * @returns { count: number, message: string }
    */
-  async deleteMediaMutiple(data: DeleteMediaTypeMultipleInput): Promise<any> {
+  async deleteMediaMutiple(data: DeleteMediaMultipleInput) {
     const { Ids } = data;
 
     if (!Ids || Ids.length === 0) {
@@ -243,4 +247,4 @@ class MediaService {
   }
 }
 
-export const mediaService = new MediaService();
+export const mediaService = (repo: MediaRepository) => new MediaService(repo);

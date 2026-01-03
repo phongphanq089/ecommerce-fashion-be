@@ -1,44 +1,53 @@
-import { FastifyReply, FastifyRequest, RouteGenericInterface } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
-  FolderIdInput,
   MediaFolderInput,
   UpdateFolderInput,
-} from './schema/media-folder.schema';
+} from './schema/mediaFolder.schema';
 import { sendResponseSuccess } from '@/utils/sendResponse';
-import { mediaFolderService } from './media.service';
+import { mediaFolderService } from './media-folder.service';
+import { MediaFolderRepository } from './media-folder.repository';
 
-export const mediaFolderController = {
-  createHandler: async (
-    req: FastifyRequest<{ Body: MediaFolderInput }>,
-    reply: FastifyReply
-  ) => {
-    const newFolder = await mediaFolderService.createFolder(req.body);
-    return sendResponseSuccess(201, reply, 'Success', newFolder);
-  },
-  async getAllHandler(req: FastifyRequest, reply: FastifyReply) {
-    const result = await mediaFolderService.getAllFoldersAsTree();
-    return sendResponseSuccess(201, reply, 'Success', result);
-  },
-  async updateHandler(
-    req: FastifyRequest<{ Body: UpdateFolderInput }>,
-    reply: FastifyReply
-  ) {
-    const updatedFolder = await mediaFolderService.updateFolder(req.body);
+export const mediaFolderController = (fastify: FastifyInstance) => {
+  // Tạo repo và service trong controller (truyền fastify.db)
+  const repo = new MediaFolderRepository(fastify.db);
+  const service = new mediaFolderService(repo);
 
-    return sendResponseSuccess(201, reply, 'Success', updatedFolder);
-  },
+  return {
+    createHandler: async (
+      req: FastifyRequest<{ Body?: MediaFolderInput }>,
+      reply: FastifyReply
+    ) => {
+      const newFolder = await service.createFolder(req.body!);
+      return sendResponseSuccess(201, reply, 'Success', newFolder);
+    },
 
-  async deleteHandler(
-    req: FastifyRequest<{ Params: FolderIdInput }>,
-    reply: FastifyReply
-  ) {
-    const { id } = req.params;
+    getAllHandler: async (req: FastifyRequest, reply: FastifyReply) => {
+      const result = await service.getAllFoldersAsTree();
+      return sendResponseSuccess(200, reply, 'Success', result);
+    },
 
-    const result = await mediaFolderService.deleteFolder(id);
-    return sendResponseSuccess(
-      201,
-      reply,
-      `Remove ${result.name} successfully`
-    );
-  },
+    updateHandler: async (
+      req: FastifyRequest<{ Body?: UpdateFolderInput }>,
+      reply: FastifyReply
+    ) => {
+      const updatedFolder = await service.updateFolder(req.body!);
+      return sendResponseSuccess(200, reply, 'Success', updatedFolder);
+    },
+
+    deleteHandler: async (
+      req: FastifyRequest<{ Params?: { id: string } }>,
+      reply: FastifyReply
+    ) => {
+      if (!req.params?.id) {
+        return sendResponseSuccess(400, reply, 'Missing required parameters');
+      }
+      const { id } = req.params;
+      const result = await service.deleteFolder(id);
+      return sendResponseSuccess(
+        200,
+        reply,
+        `Remove ${result.name} successfully`
+      );
+    },
+  };
 };
