@@ -6,24 +6,19 @@
     "auditLog": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\.2264e13b249085939b54b90f129b1ab820bf5cbd-audit.json",
     "files": [
         {
-            "date": 1760760338321,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2025-10-18.log",
-            "hash": "d0565120fc4d0e588401eb735682254697401c9ca2b4d4c0bbb96404f98131a2"
+            "date": 1767163879985,
+            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2025-12-31.log",
+            "hash": "57517fefa01e3e9afa559a2d62ae474b3e91cd3538c471e49354c361754e145d"
         },
         {
-            "date": 1760840613110,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2025-10-19.log",
-            "hash": "b1fcd6820baa800d4b614907addbc29d42b7455a80f381ef82c7d85b427e1902"
+            "date": 1767318221028,
+            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2026-01-02.log",
+            "hash": "2f912e3d7bd606f0a5fdd701c2f9b8e7eb6ca72e51cb576d2b1f969949bb4977"
         },
         {
-            "date": 1761060421518,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2025-10-21.log",
-            "hash": "5e41682d0fa3c32d830ada3a323aaa256f33e20024662082ad2ef1da97be8ff6"
-        },
-        {
-            "date": 1761837956455,
-            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2025-10-30.log",
-            "hash": "3f34de2d47ff823209b2c16ca2d2440827dd7a23b8f8ffaece0fcf98fbe0a01d"
+            "date": 1767411120096,
+            "name": "D:\\PROJECT-PORTFOLIO\\ecommerce-fashion-be\\logs\\combined-2026-01-03.log",
+            "hash": "fc847947eeb599ee3c87bac14d85cd601bc390392faec73bc07d4aed3a4827f4"
         }
     ],
     "hashType": "sha256"
