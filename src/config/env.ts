@@ -53,6 +53,10 @@ const envSchema = z.object({
   IMAGE_KIT_PUBLIC_KEY: z.string().min(1, 'ImageKit public key is required'),
   IMAGE_KIT_PRIVATE_KEY: z.string().min(1, 'ImageKit private key is required'),
   IMAGE_KIT_URLENDOINT: z.string().url('ImageKit endpoint must be a valid URL'),
+
+  // --- Auth / JWT ---
+  BETTER_AUTH_SECRET: z.string().min(1, 'Better Auth secret is required'),
+  BETTER_AUTH_URL: z.string().url('Better Auth URL must be a valid URL'),
 });
 
 // Parse and Validate

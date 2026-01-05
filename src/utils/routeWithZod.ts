@@ -16,6 +16,7 @@ import {
   FastifyRequest,
   FastifyReply,
   RouteOptions,
+  HTTPMethods,
 } from 'fastify';
 import { ZodSchema } from 'zod';
 import { zodValidate } from './zodValidate';
@@ -43,7 +44,7 @@ interface RouteWithZodOptions
     | 'onSend'
     | 'onResponse'
   > {
-  method: HttpMethod;
+  method: HttpMethod | HttpMethod[];
   url: string;
   /** Schema JSON thuần dùng để hiển thị trên giao diện Swagger UI */
   swaggerSchema?: any;
@@ -110,9 +111,15 @@ export function routeWithZod(
       : [preHandler, ...zodPreHandlers]
     : zodPreHandlers;
 
+  const fastifyMethod = (
+    Array.isArray(method)
+      ? method.map((m) => m.toUpperCase())
+      : method.toUpperCase()
+  ) as HTTPMethods | HTTPMethods[];
+
   // --- BƯỚC 2: ĐĂNG KÝ ROUTE VỚI FASTIFY ---
   fastify.route({
-    method: method.toUpperCase() as any,
+    method: fastifyMethod,
     url,
     handler,
     ...restOptions,
