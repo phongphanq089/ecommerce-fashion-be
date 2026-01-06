@@ -224,4 +224,40 @@ export const authPlugin = (fastify: FastifyInstance) => {
     },
     handler: betterAuthHandler,
   });
+
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/sign-in/social',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Đăng nhập mạng xã hội (Google, Github...)',
+      body: {
+        type: 'object',
+        required: ['provider'],
+        properties: {
+          provider: { type: 'string', enum: ['google', 'facebook', 'github'] },
+          callbackURL: {
+            type: 'string',
+            description: 'Link frontend muốn redirect về sau khi login xong',
+          },
+        },
+      },
+    },
+    handler: betterAuthHandler,
+  });
+
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/callback/:id', // :id sẽ ứng với 'google', 'facebook', 'github'...
+    disableValidator: true, // Tắt validate vì Google trả về query param rất dài
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Callback từ Social Login',
+      description:
+        'API này được Google/Facebook gọi tự động sau khi login thành công.',
+      hide: true, // Ẩn khỏi Swagger cho đỡ rối (hoặc để hiện tùy bạn)
+    },
+    handler: betterAuthHandler,
+  });
 };

@@ -43,7 +43,6 @@ export const paymentStatusEnum = pgEnum('payment_status', [
 ]);
 
 // ------------ TABLES ------------ //
-
 /**
  * @USER
  */
@@ -146,8 +145,7 @@ export const profiles = pgTable('profiles', {
   id: uuid('id').defaultRandom().primaryKey(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
-  phone: text('phone').unique().default(''),
-
+  phone: text('phone').unique(),
   bio: text('bio').default(''),
   birthday: timestamp('birthday').defaultNow(),
   userId: text('user_id')

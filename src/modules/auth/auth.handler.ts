@@ -3,14 +3,12 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { auth } from '@/utils/auth';
 import { sendResponseError, sendResponseSuccess } from '@/utils/sendResponse';
 
-// Type definition for Better-Auth response
 interface BetterAuthResponse {
   code?: string;
   message?: string;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
-// Hàm xử lý chung cho tất cả request Auth
 export const betterAuthHandler = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -34,48 +32,81 @@ export const betterAuthHandler = async (
       ...(request.body ? { body: JSON.stringify(request.body) } : {}),
     });
 
-    // console.log(
-    //   'BODY GỬI SANG BETTER-AUTH:',
-    //   JSON.stringify(request.body, null, 2)
-    // );
-
     const response = await auth.handler(req);
+
+    // -------------------------------------------------------------
+    // 1. XỬ LÝ COOKIE (Fix lỗi mất cookie State/Session)
+    // -------------------------------------------------------------
+    if (typeof response.headers.getSetCookie === 'function') {
+      const cookies = response.headers.getSetCookie();
+      if (cookies.length > 0) reply.header('set-cookie', cookies);
+    } else {
+      const cookieHeader = response.headers.get('set-cookie');
+      if (cookieHeader) reply.header('set-cookie', cookieHeader);
+    }
+
+    // 2. Copy các headers khác (Trừ set-cookie đã xử lý)
+    response.headers.forEach((value, key) => {
+      if (key.toLowerCase() !== 'set-cookie') {
+        reply.header(key, value);
+      }
+    });
 
     reply.status(response.status);
 
-    response.headers.forEach((value, key) => reply.header(key, value));
+    // -------------------------------------------------------------
+    // 3. XỬ LÝ BODY (FIX LỖI CRASH Ở ĐÂY)
+    // -------------------------------------------------------------
 
-    // console.log('BODY NHAN LAI:', JSON.stringify(response.body, null, 2));
+    // Lấy Content-Type để xem nó là JSON hay là thứ khác
+    const contentType = response.headers.get('content-type') || '';
 
-    // 4. Lấy dữ liệu JSON từ Better-Auth
-    // Better-Auth luôn trả về JSON, nhưng ta cần parse nó ra để xử lý
-    const data = (await response.json()) as BetterAuthResponse;
+    // Lấy nội dung dưới dạng Text trước (An toàn nhất)
+    const textBody = await response.text();
 
-    // 5. XỬ LÝ FORMAT RESPONSE (Override ở đây)
+    // ==> TRƯỜNG HỢP A: Là JSON (API login thường, error, user info...)
+    if (
+      contentType.includes('application/json') &&
+      textBody.trim().length > 0
+    ) {
+      try {
+        const data = JSON.parse(textBody) as BetterAuthResponse;
 
-    // --> TRƯỜNG HỢP LỖI (Status >= 400)
-    if (!response.ok) {
-      // Better-Auth trả về: { code: "...", message: "..." }
-      // Bạn muốn map sang format của bạn
-      return sendResponseError(
-        response.status,
-        reply,
-        data?.message || 'Authentication Error', // Lấy message của Better-Auth
-        data // Truyền cả cục data gốc vào result để FE biết mã lỗi (code)
-      );
+        // Nếu có lỗi từ Better-Auth (VD: sai pass, email trùng...)
+        if (!response.ok) {
+          return sendResponseError(
+            response.status,
+            reply,
+            data?.message || 'Authentication Error',
+            data
+          );
+        }
+
+        // Thành công JSON
+        return sendResponseSuccess(
+          response.status,
+          reply,
+          'Authentication Successful',
+          data
+        );
+      } catch (e) {
+        // Phòng hờ parse lỗi
+        return reply.send(textBody);
+      }
     }
 
-    // --> TRƯỜNG HỢP THÀNH CÔNG (Status 200/201)
-    return sendResponseSuccess(
-      response.status,
-      reply,
-      'Authentication Successful', // Hoặc tùy biến message dựa trên URL
-      data
-    );
+    // ==> TRƯỜNG HỢP B: Là Redirect (302) hoặc Text thường (Social Login)
+    // Google Login xong sẽ rơi vào đây. Body rỗng, status 302.
+    // Ta trả nguyên về để trình duyệt tự chuyển hướng.
+    return reply.send(textBody);
   } catch (error: unknown) {
     const errorMessage =
       error instanceof Error ? error.message : 'Internal Auth Error';
     request.log.error('Authentication Error:', error as any);
-    return reply.status(500).send({ error: errorMessage });
+
+    // Chỉ gửi lỗi nếu response chưa được gửi đi
+    if (!reply.sent) {
+      return reply.status(500).send({ error: errorMessage });
+    }
   }
 };
