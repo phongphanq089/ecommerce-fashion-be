@@ -1,11 +1,12 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import {
-  MediaFolderInput,
-  UpdateFolderInput,
-} from './schema/mediaFolder.schema';
+
 import { sendResponseSuccess } from '@/utils/sendResponse';
 import { mediaFolderService } from './media-folder.service';
 import { MediaFolderRepository } from './media-folder.repository';
+import {
+  MediaFolderCreateInput,
+  MediaFolderUpdateInput,
+} from './media-folder.validation';
 
 export const mediaFolderController = (fastify: FastifyInstance) => {
   // Tạo repo và service trong controller (truyền fastify.db)
@@ -14,7 +15,7 @@ export const mediaFolderController = (fastify: FastifyInstance) => {
 
   return {
     createHandler: async (
-      req: FastifyRequest<{ Body?: MediaFolderInput }>,
+      req: FastifyRequest<{ Body?: MediaFolderCreateInput }>,
       reply: FastifyReply
     ) => {
       const newFolder = await service.createFolder(req.body!);
@@ -27,7 +28,7 @@ export const mediaFolderController = (fastify: FastifyInstance) => {
     },
 
     updateHandler: async (
-      req: FastifyRequest<{ Body?: UpdateFolderInput }>,
+      req: FastifyRequest<{ Body?: MediaFolderUpdateInput }>,
       reply: FastifyReply
     ) => {
       const updatedFolder = await service.updateFolder(req.body!);
