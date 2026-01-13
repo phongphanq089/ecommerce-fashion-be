@@ -1,9 +1,9 @@
 import { AppError, ConflictError, NotFoundError } from '@/utils/errors';
 import { MediaFolderRepository } from './media-folder.repository';
 import {
-  MediaFolderInput,
-  UpdateFolderInput,
-} from './schema/mediaFolder.schema';
+  MediaFolderCreateInput,
+  MediaFolderUpdateInput,
+} from './media-folder.validation';
 
 export class mediaFolderService {
   private repo: MediaFolderRepository;
@@ -12,7 +12,7 @@ export class mediaFolderService {
     this.repo = repo;
   }
 
-  async createFolder(data: MediaFolderInput) {
+  async createFolder(data: MediaFolderCreateInput) {
     // Business logic: Không cho tạo folder trùng tên trong cùng một cấp
     const existing = await this.repo.findByNameAndParent(
       data.name,
@@ -30,7 +30,7 @@ export class mediaFolderService {
 
     return allFolders;
   }
-  async updateFolder(data: UpdateFolderInput) {
+  async updateFolder(data: MediaFolderUpdateInput) {
     const folder = await this.repo.findById(data.id);
     if (!folder) {
       throw new NotFoundError('Folder not found');

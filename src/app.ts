@@ -76,7 +76,8 @@ export function buildServer() {
         description: 'API documentation for the ecommerce website',
         version: '1.0.0',
       },
-      servers: [{ url: ENV_CONFIG.SERVER_URL }],
+
+      servers: [{ url: ENV_CONFIG.BASE_URL }, { url: ENV_CONFIG.SERVER_URL }],
     },
   });
 

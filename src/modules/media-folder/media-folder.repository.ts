@@ -1,4 +1,3 @@
-import { UpdateFolderInput } from './schema/mediaFolder.schema';
 import * as schema from '@/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { Database } from '@/plugins/database';

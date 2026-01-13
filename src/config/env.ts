@@ -10,6 +10,7 @@ const envSchema = z.object({
     .default('development'),
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('127.0.0.1'),
+  BASE_URL: z.string().url('BASE_URL must be a valid URL'),
 
   // --- Database ---
   DATABASE_URL: z.string().min(1, 'Database URL is required'),
@@ -53,6 +54,14 @@ const envSchema = z.object({
   IMAGE_KIT_PUBLIC_KEY: z.string().min(1, 'ImageKit public key is required'),
   IMAGE_KIT_PRIVATE_KEY: z.string().min(1, 'ImageKit private key is required'),
   IMAGE_KIT_URLENDOINT: z.string().url('ImageKit endpoint must be a valid URL'),
+
+  // --- Auth / JWT ---
+  BETTER_AUTH_SECRET: z.string().min(1, 'Better Auth secret is required'),
+  BETTER_AUTH_URL: z.string().url('Better Auth URL must be a valid URL'),
+
+  // --- Social Login ---
+  GOOGLE_CLIENT_ID: z.string().min(1, 'Google Client ID is required'),
+  GOOGLE_CLIENT_SECRET: z.string().min(1, 'Google Client Secret is required'),
 });
 
 // Parse and Validate

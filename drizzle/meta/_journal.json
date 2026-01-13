@@ -22,6 +22,13 @@
       "when": 1767325734431,
       "tag": "0002_last_silver_samurai",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767598440524,
+      "tag": "0003_glamorous_pride",
+      "breakpoints": true
     }
   ]
 }
