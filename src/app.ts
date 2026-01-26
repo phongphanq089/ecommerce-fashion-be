@@ -46,6 +46,7 @@ export function buildServer() {
     ENV_CONFIG.CLIENT_ORIGIN,
     ENV_CONFIG.CLIENT_URL,
     'https://ecommerce-fashion-fe.vercel.app',
+    'http://localhost:3000',
   ].filter(Boolean);
 
   server.register(fastifyCors, {
