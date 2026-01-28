@@ -137,10 +137,11 @@ export function routeWithZod(
     ...(onResponse && { onResponse }),
 
     // NÚT THOÁT HIỂM (ESCAPE HATCH):
-    // Khi disableValidator = true (thường dùng cho Multipart), ta gán một no-op function.
-    // Điều này ngăn Fastify cố gắng biên dịch Swagger Schema qua Zod Provider gây lỗi crash.
+    // Khi disableValidator = true (thường dùng cho Multipart hoặc Proxy Auth), ta gán một no-op function.
+    // Điều này ngăn Fastify cố gắng biên dịch Swagger Schema qua Zod Provider gây lỗi crash (cả validator và serializer).
     ...(disableValidator && {
       validatorCompiler: () => () => true,
+      serializerCompiler: () => (data: any) => JSON.stringify(data),
     }),
   });
 }
