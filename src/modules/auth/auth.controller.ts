@@ -1,11 +1,12 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { COOKIE_NAME } from '@/constants';
-import { LoginInput, RegisterInput } from './auth.validation';
+import { LoginInput, RegisterInput, VerifyEmailInput } from './auth.validation';
 import { sendResponseSuccess } from '@/utils/sendResponse';
 import { AuthRepository } from './auth.repository';
 import ms from 'ms';
 import { ENV_CONFIG } from '@/config/env';
+import { BadRequestError } from '@/utils/errors';
 
 export const authController = (fastify: FastifyInstance) => {
   const repo = new AuthRepository(fastify.db);
@@ -76,6 +77,16 @@ export const authController = (fastify: FastifyInstance) => {
       const user = req.user as { id: string };
       const result = await service.getProfile(user.id);
       return sendResponseSuccess(200, reply, 'Get me success', result);
+    },
+    verifyEmailHandler: async (
+      req: FastifyRequest<{ Body?: VerifyEmailInput }>,
+      reply: FastifyReply
+    ) => {
+      if (!req.body?.email || !req.body?.token) {
+        throw new BadRequestError('Missing email or token');
+      }
+      const result = await service.verifyEmail(req.body.email, req.body.token);
+      return sendResponseSuccess(200, reply, 'Verify `email success', result);
     },
   };
 };

@@ -5,6 +5,7 @@ if (ENV_CONFIG.NODE_ENV === 'production') {
 }
 import dotenv from 'dotenv';
 import { buildServer } from './app';
+import { seedSuperAdmin } from './utils/seed-super-admin';
 import { LOGGER_CONSOLE } from './utils/log-console';
 import { logger } from './utils/logger';
 
@@ -15,6 +16,7 @@ const server = buildServer();
 const start = async () => {
   try {
     await server.listen({ port: ENV_CONFIG.PORT, host: ENV_CONFIG.HOST });
+    await seedSuperAdmin();
     LOGGER_CONSOLE.logStartupInfo();
   } catch (err) {
     console.error('❌ Failed to resolve path alias "@". Please check paths.');

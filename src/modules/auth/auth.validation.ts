@@ -30,6 +30,11 @@ export const resetPasswordSchema = z.object({
   token: z.string(),
 });
 
+export const verifyEmailSchema = z.object({
+  email: z.email(),
+  token: z.string(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GetMeInput = z.infer<typeof getMeSchema>;
@@ -37,3 +42,6 @@ export type LogoutInput = z.infer<typeof logoutSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+export type Users = typeof users.$inferSelect;

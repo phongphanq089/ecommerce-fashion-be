@@ -10,6 +10,7 @@ export const AUTH_SUMMARIES = {
   FORGET_PASSWORD: 'Request to reset password (Forgot password)',
   RESET_PASSWORD: 'Reset password (Use token from email)',
   CHANGE_PASSWORD: 'Change password (When logged in)',
+  VERIFY_EMAIL: 'Verify email',
 };
 
 export const AUTH_DESCRIPTIONS = {

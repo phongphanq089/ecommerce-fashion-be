@@ -13,6 +13,7 @@ import {
   UnauthorizedError,
 } from '@/utils/errors';
 import { FastifyInstance } from 'fastify';
+import { BrevoProvider } from '@/provider/brevo-provider';
 
 export class AuthService {
   private repo: AuthRepository;
@@ -27,7 +28,24 @@ export class AuthService {
       throw new ConflictError('User already exists');
     }
 
-    return this.repo.createUser(data);
+    const user = await this.repo.createUser(data);
+
+    await BrevoProvider.sendMail(
+      user?.email as string,
+      'WELCOME TO ECOMMERCE FASHION',
+      {
+        name: user?.email as string,
+        companyName: 'APK APP',
+        companyDomain: 'phongphan.com',
+        verificationUrl: `${ENV_CONFIG.URL_REDIRECT_FE}/verify-email?email=${user?.email}&token=${user?.verificationToken}`,
+        logoUrl:
+          'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
+        year: `${new Date().getFullYear()}`,
+      },
+      'src/templates/template-mail.html'
+    );
+
+    return user;
   }
 
   async login(server: FastifyInstance, data: LoginInput) {
@@ -46,6 +64,10 @@ export class AuthService {
       throw new UnauthorizedError(
         'Invalid email or password (Password not match)'
       );
+    }
+
+    if (!findUserByEmail.emailVerified) {
+      throw new UnauthorizedError('Email not verified');
     }
 
     const accessToken = server.jwt.sign({
@@ -136,6 +158,16 @@ export class AuthService {
     const user = await this.repo.getProfile(userId);
 
     if (!user) throw new NotFoundError('User not found');
+    return user;
+  }
+
+  async verifyEmail(email: string, token: string) {
+    const user = await this.repo.findUserByEmail(email);
+    if (!user) throw new NotFoundError('User not found');
+    if (user.verificationToken !== token)
+      throw new UnauthorizedError('Invalid token');
+    user.emailVerified = true;
+    await this.repo.updateUser(user);
     return user;
   }
 }

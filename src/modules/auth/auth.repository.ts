@@ -1,11 +1,12 @@
 import { Database } from '@/plugins/database';
-import { RegisterInput } from './auth.validation';
+import { RegisterInput, Users } from './auth.validation';
 import { profiles, refreshTokens, users } from '@/db/schema';
 import { createId } from '@paralleldrive/cuid2';
 import { hashPassword } from '@/utils/jwt';
 import { eq } from 'drizzle-orm';
 import { ENV_CONFIG } from '@/config/env';
 import ms from 'ms';
+import { BrevoProvider } from '@/provider/brevo-provider';
 
 export class AuthRepository {
   private db: Database;
@@ -55,15 +56,19 @@ export class AuthRepository {
     const lastName =
       nameParts.length > 1 ? nameParts.slice(1).join(' ') : firstName;
 
-    await this.db.transaction(async (tx) => {
-      await tx.insert(users).values({
-        id: userId,
-        email,
-        name,
-        password: hashedPassword,
-        avatarUrl,
-        emailVerified: false,
-      });
+    const result = await this.db.transaction(async (tx) => {
+      const [user] = await tx
+        .insert(users)
+        .values({
+          id: userId,
+          email,
+          name,
+          password: hashedPassword,
+          avatarUrl,
+          emailVerified: false,
+          verificationToken: createId(),
+        })
+        .returning();
 
       const newProfile: typeof profiles.$inferInsert = {
         userId: userId,
@@ -72,9 +77,15 @@ export class AuthRepository {
       };
 
       await tx.insert(profiles).values(newProfile);
+
+      return user;
     });
 
-    return { message: 'User registered successfully' };
+    return result;
+  }
+
+  async updateUser(user: Users) {
+    return this.db.update(users).set(user).where(eq(users.id, user.id));
   }
 
   async deleteRefreshToken(refreshToken: string) {
@@ -88,6 +99,7 @@ export class AuthRepository {
       where: eq(users.id, userId),
       columns: {
         password: false,
+        verificationToken: false,
       },
       with: {
         profile: true,

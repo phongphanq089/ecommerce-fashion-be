@@ -3,7 +3,11 @@ import { FastifyInstance } from 'fastify';
 import { AUTH_DESCRIPTIONS, AUTH_SUMMARIES, AUTH_TAG } from './auth.docs';
 import { authenticate } from '@/middleware/auth.middleware';
 import { authController } from './auth.controller';
-import { loginSchema, registerSchema } from './auth.validation';
+import {
+  loginSchema,
+  registerSchema,
+  verifyEmailSchema,
+} from './auth.validation';
 
 export const authPlugin = (fastify: FastifyInstance) => {
   const controller = authController(fastify);
@@ -86,5 +90,27 @@ export const authPlugin = (fastify: FastifyInstance) => {
       security: [{ bearerAuth: [] }],
     },
     handler: controller.getMeHandler,
+  });
+
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/verify-email',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: AUTH_SUMMARIES.VERIFY_EMAIL,
+      description: AUTH_SUMMARIES.VERIFY_EMAIL,
+      body: {
+        type: 'object',
+        required: ['email', 'token'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          token: { type: 'string' },
+        },
+      },
+    },
+
+    bodySchema: verifyEmailSchema,
+    handler: controller.verifyEmailHandler,
   });
 };

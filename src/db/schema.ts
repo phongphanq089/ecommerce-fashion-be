@@ -16,7 +16,11 @@ import { createId } from '@paralleldrive/cuid2';
 
 const cuid = createId;
 // --- ENUMS --- //
-export const userRoleEnum = pgEnum('user_role', ['CUSTOMER', 'ADMIN']);
+export const userRoleEnum = pgEnum('user_role', [
+  'CUSTOMER',
+  'ADMIN',
+  'SUPER_ADMIN',
+]);
 export const mediaTypeEnum = pgEnum('media_type', [
   'IMAGE',
   'VIDEO',
@@ -51,6 +55,7 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
+  verificationToken: text('verification_token'),
   avatarUrl: text('avatar_url'),
   createAt: timestamp('create_at').defaultNow().notNull(),
   role: userRoleEnum('role').default('CUSTOMER'),

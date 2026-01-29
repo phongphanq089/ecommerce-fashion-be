@@ -21,9 +21,10 @@ const envSchema = z.object({
     .url('Invalid Sentry URL format')
     .optional()
     .or(z.literal('')),
-  CLIENT_ORIGIN: z.string().url('CLIENT_ORIGIN must be a valid URL'),
-  SERVER_URL: z.string().url('SERVER_URL must be a valid URL'),
-  CLIENT_URL: z.string().url('CLIENT_URL must be a valid URL'),
+  CLIENT_ORIGIN: z.url('CLIENT_ORIGIN must be a valid URL'),
+  SERVER_URL: z.url('SERVER_URL must be a valid URL'),
+  CLIENT_URL: z.url('CLIENT_URL must be a valid URL'),
+  URL_REDIRECT_FE: z.url('URL_REDIRECT_FE must be a valid URL'),
 
   // --- Auth / JWT ---
   ACCESS_TOKEN_SECRET_SIGNATURE: z
@@ -58,6 +59,17 @@ const envSchema = z.object({
   // --- Social Login ---
   GOOGLE_CLIENT_ID: z.string().min(1, 'Google Client ID is required'),
   GOOGLE_CLIENT_SECRET: z.string().min(1, 'Google Client Secret is required'),
+
+  // --- Super Admin Seeding ---
+  SUPER_ADMIN_EMAIL: z.email('Invalid super admin email address').optional(),
+  SUPER_ADMIN_PASSWORD: z
+    .string()
+    .min(6, 'Super admin password must be at least 6 chars')
+    .optional(),
+  SUPER_ADMIN_NAME: z
+    .string()
+    .min(1, 'Super admin name is required')
+    .optional(),
 });
 
 // Parse and Validate

@@ -43,6 +43,20 @@
       "when": 1769577459270,
       "tag": "0005_deep_spirit",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1769661135962,
+      "tag": "0006_fluffy_pestilence",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769668342028,
+      "tag": "0007_cold_swarm",
+      "breakpoints": true
     }
   ]
 }
