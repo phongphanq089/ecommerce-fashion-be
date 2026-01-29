@@ -11,3 +11,5 @@ export const ALLOW_COMMOM_FILE_TYPES_GALLERY = [
 ];
 
 export const DEFAULT_FOLDER_NAME = 'Default Folder';
+
+export const COOKIE_NAME = 'refresh_token';

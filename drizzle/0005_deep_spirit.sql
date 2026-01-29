@@ -1,0 +1,1 @@
+ALTER TABLE "refresh_token" ADD COLUMN "replaced_by_token" text;
