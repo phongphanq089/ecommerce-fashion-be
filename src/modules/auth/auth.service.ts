@@ -1,6 +1,7 @@
 import { db } from '@/db/config';
 import { refreshTokens } from '@/db/schema';
-import { comparePassword } from '@/utils/jwt';
+import { comparePassword, hashPassword } from '@/utils/jwt';
+import crypto from 'crypto';
 import { eq } from 'drizzle-orm';
 import { createId } from '@paralleldrive/cuid2';
 import { ENV_CONFIG } from '@/config/env';
@@ -11,6 +12,7 @@ import {
   ConflictError,
   NotFoundError,
   UnauthorizedError,
+  BadRequestError,
 } from '@/utils/errors';
 import { FastifyInstance } from 'fastify';
 import { BrevoProvider } from '@/provider/brevo-provider';
@@ -30,6 +32,8 @@ export class AuthService {
 
     const user = await this.repo.createUser(data);
 
+    const redirectUrl = data.urlRedirect || ENV_CONFIG.URL_REDIRECT_FE;
+
     await BrevoProvider.sendMail(
       user?.email as string,
       'WELCOME TO ECOMMERCE FASHION',
@@ -37,7 +41,7 @@ export class AuthService {
         name: user?.email as string,
         companyName: 'APK APP',
         companyDomain: 'phongphan.com',
-        verificationUrl: `${ENV_CONFIG.URL_REDIRECT_FE}/verify-email?email=${user?.email}&token=${user?.verificationToken}`,
+        verificationUrl: `${redirectUrl}/verify-email?email=${user?.email}&token=${user?.verificationToken}`,
         logoUrl:
           'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
         year: `${new Date().getFullYear()}`,
@@ -166,8 +170,105 @@ export class AuthService {
     if (!user) throw new NotFoundError('User not found');
     if (user.verificationToken !== token)
       throw new UnauthorizedError('Invalid token');
+    if (
+      user.verificationTokenExpires &&
+      user.verificationTokenExpires < new Date()
+    ) {
+      throw new UnauthorizedError('Token expired');
+    }
     user.emailVerified = true;
+    user.verificationToken = null;
+    user.verificationTokenExpires = null;
     await this.repo.updateUser(user);
     return user;
+  }
+
+  async resendVerificationEmail(email: string, urlRedirect?: string) {
+    const user = await this.repo.findUserByEmail(email);
+    if (!user) throw new NotFoundError('User not found');
+    if (user.emailVerified) throw new BadRequestError('User already verified');
+
+    user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await this.repo.updateUser(user);
+
+    const redirectUrl = urlRedirect || ENV_CONFIG.URL_REDIRECT_FE;
+
+    await BrevoProvider.sendMail(
+      user.email,
+      'RESEND VERIFICATION EMAIL',
+      {
+        name: user.email,
+        companyName: 'APK_SHOP',
+        companyDomain: 'phongphan.com',
+        verificationUrl: `${redirectUrl}/verify-email?email=${user.email}&token=${user.verificationToken}`,
+        logoUrl:
+          'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
+        year: `${new Date().getFullYear()}`,
+      },
+      'src/templates/template-mail.html'
+    );
+
+    return { message: 'Verification email sent successfully' };
+  }
+
+  async forgotPassword(email: string, urlRedirect?: string) {
+    const user = await this.repo.findUserByEmail(email);
+    if (!user) throw new NotFoundError('User not found');
+    if (!user.emailVerified) throw new BadRequestError('User not verified');
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+
+    // Update user with reset token
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = resetTokenExpires;
+    await this.repo.updateUser(user);
+
+    const redirectUrl = urlRedirect || ENV_CONFIG.URL_REDIRECT_FE;
+
+    await BrevoProvider.sendMail(
+      user.email,
+      'FORGOT PASSWORD',
+      {
+        name: user.email,
+        companyName: 'APK_SHOP',
+        companyDomain: 'phongphan.com',
+        // Update URL to use resetToken
+        resetPasswordUrl: `${redirectUrl}/reset-password?email=${user.email}&token=${resetToken}`,
+        logoUrl:
+          'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
+        year: `${new Date().getFullYear()}`,
+      },
+      'src/templates/reset-password.html'
+    );
+
+    return { message: 'Reset password email sent successfully' };
+  }
+
+  async resetPassword(email: string, token: string, password?: string) {
+    const user = await this.repo.findUserByEmail(email);
+    if (!user) throw new NotFoundError('User not found');
+    if (!user.emailVerified) throw new BadRequestError('User not verified');
+
+    if (
+      user.resetPasswordToken !== token ||
+      !user.resetPasswordExpires ||
+      user.resetPasswordExpires < new Date()
+    ) {
+      throw new UnauthorizedError('Invalid or expired reset token');
+    }
+
+    if (!password) {
+      throw new BadRequestError('Password is required');
+    }
+
+    const hashedPassword = await hashPassword(password);
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    await this.repo.updateUser(user);
+
+    return { message: 'Password reset successfully' };
   }
 }

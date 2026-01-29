@@ -67,6 +67,7 @@ export class AuthRepository {
           avatarUrl,
           emailVerified: false,
           verificationToken: createId(),
+          verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
         })
         .returning();
 

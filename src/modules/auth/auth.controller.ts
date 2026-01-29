@@ -1,7 +1,14 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { COOKIE_NAME } from '@/constants';
-import { LoginInput, RegisterInput, VerifyEmailInput } from './auth.validation';
+import {
+  LoginInput,
+  RegisterInput,
+  VerifyEmailInput,
+  ResendVerifyEmailInput,
+  ForgotPasswordInput,
+  ResetPasswordInput,
+} from './auth.validation';
 import { sendResponseSuccess } from '@/utils/sendResponse';
 import { AuthRepository } from './auth.repository';
 import ms from 'ms';
@@ -35,8 +42,8 @@ export const authController = (fastify: FastifyInstance) => {
       reply.setCookie(COOKIE_NAME, result.refreshToken, {
         path: '/',
         httpOnly: true,
-        secure: ENV_CONFIG.IS_PRODUCTION,
-        sameSite: 'lax',
+        sameSite: ENV_CONFIG.IS_PRODUCTION ? 'none' : 'lax', // Prod khác domain thì dùng 'none', Dev cùng localhost dùng 'lax'
+        secure: ENV_CONFIG.IS_PRODUCTION, // Prod bắt buộc true, Dev thì false
         maxAge: maxAge / 1000,
       });
 
@@ -63,8 +70,8 @@ export const authController = (fastify: FastifyInstance) => {
       reply.setCookie(COOKIE_NAME, result.refreshToken, {
         path: '/',
         httpOnly: true,
-        secure: ENV_CONFIG.IS_PRODUCTION,
-        sameSite: 'lax',
+        sameSite: ENV_CONFIG.IS_PRODUCTION ? 'none' : 'lax', // Prod khác domain thì dùng 'none', Dev cùng localhost dùng 'lax'
+        secure: ENV_CONFIG.IS_PRODUCTION, // Prod bắt buộc true, Dev thì false
         maxAge: maxAge / 1000,
       });
 
@@ -87,6 +94,43 @@ export const authController = (fastify: FastifyInstance) => {
       }
       const result = await service.verifyEmail(req.body.email, req.body.token);
       return sendResponseSuccess(200, reply, 'Verify `email success', result);
+    },
+
+    resendVerifyEmailHandler: async (
+      req: FastifyRequest<{ Body?: ResendVerifyEmailInput }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.resendVerificationEmail(
+        req.body!.email,
+        req.body!.urlRedirect
+      );
+      return sendResponseSuccess(
+        200,
+        reply,
+        'Resend verification email success',
+        result
+      );
+    },
+    forgotPasswordHandler: async (
+      req: FastifyRequest<{ Body?: ForgotPasswordInput }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.forgotPassword(
+        req.body!.email,
+        req.body!.urlRedirect
+      );
+      return sendResponseSuccess(200, reply, 'Forgot password success', result);
+    },
+    resetPasswordHandler: async (
+      req: FastifyRequest<{ Body?: ResetPasswordInput }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.resetPassword(
+        req.body!.email,
+        req.body!.token,
+        req.body!.password
+      );
+      return sendResponseSuccess(200, reply, 'Reset password success', result);
     },
   };
 };

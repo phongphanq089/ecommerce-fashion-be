@@ -20,6 +20,7 @@ export const userRoleEnum = pgEnum('user_role', [
   'CUSTOMER',
   'ADMIN',
   'SUPER_ADMIN',
+  'STAFF',
 ]);
 export const mediaTypeEnum = pgEnum('media_type', [
   'IMAGE',
@@ -56,10 +57,13 @@ export const users = pgTable('users', {
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   verificationToken: text('verification_token'),
+  verificationTokenExpires: timestamp('verification_token_expires'),
   avatarUrl: text('avatar_url'),
   createAt: timestamp('create_at').defaultNow().notNull(),
   role: userRoleEnum('role').default('CUSTOMER'),
   password: text('password').notNull(),
+  resetPasswordToken: text('reset_password_token'),
+  resetPasswordExpires: timestamp('reset_password_expires'),
   updateAt: timestamp('update_at')
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())

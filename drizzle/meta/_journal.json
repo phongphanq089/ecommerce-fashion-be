@@ -57,6 +57,20 @@
       "when": 1769668342028,
       "tag": "0007_cold_swarm",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1769669652597,
+      "tag": "0008_round_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769676698441,
+      "tag": "0009_smart_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

@@ -7,9 +7,13 @@ import {
   loginSchema,
   registerSchema,
   verifyEmailSchema,
+  resendVerifyEmailSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from './auth.validation';
+import { ROLE_NAME } from '@/constants';
 
-export const authPlugin = (fastify: FastifyInstance) => {
+export const authRoutes = (fastify: FastifyInstance) => {
   const controller = authController(fastify);
 
   routeWithZod(fastify, {
@@ -29,6 +33,7 @@ export const authPlugin = (fastify: FastifyInstance) => {
           password: { type: 'string', minLength: 8 },
           name: { type: 'string' },
           avatarUrl: { type: 'string', nullable: true },
+          urlRedirect: { type: 'string', format: 'url', nullable: true },
         },
       },
     },
@@ -112,5 +117,90 @@ export const authPlugin = (fastify: FastifyInstance) => {
 
     bodySchema: verifyEmailSchema,
     handler: controller.verifyEmailHandler,
+  });
+
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/resend-verify-email',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Resend Verification Email',
+      description: 'Resend Verification Email',
+      body: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          urlRedirect: { type: 'string', format: 'url', nullable: true },
+        },
+      },
+    },
+    bodySchema: resendVerifyEmailSchema,
+    handler: controller.resendVerifyEmailHandler,
+  });
+
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/forgot-password',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Forgot Password',
+      description: 'Forgot Password',
+      body: {
+        type: 'object',
+        required: ['email'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          urlRedirect: { type: 'string', format: 'url', nullable: true },
+        },
+      },
+    },
+    bodySchema: forgotPasswordSchema,
+    handler: controller.forgotPasswordHandler,
+  });
+
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/reset-password',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Reset Password',
+      description: 'Reset Password',
+      body: {
+        type: 'object',
+        required: ['email', 'password', 'token'],
+        properties: {
+          email: { type: 'string', format: 'email' },
+          password: { type: 'string' },
+          token: { type: 'string' },
+        },
+      },
+    },
+    bodySchema: resetPasswordSchema,
+    handler: controller.resetPasswordHandler,
+  });
+
+  // ===== api text authorization =====
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/users-all',
+    disableValidator: true,
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Get All Users',
+      description: 'Get All Users',
+      security: [{ bearerAuth: [] }],
+    },
+
+    bodySchema: verifyEmailSchema,
+    handler: async (req, reply) => {
+      return 'Users fetched successfully';
+    },
   });
 };

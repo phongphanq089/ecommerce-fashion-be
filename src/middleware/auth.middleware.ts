@@ -1,4 +1,4 @@
-import { UnauthorizedError } from '@/utils/errors';
+import { ForbiddenError, UnauthorizedError } from '@/utils/errors';
 import { FastifyReply, FastifyRequest } from 'fastify';
 
 export const authenticate = async (
@@ -19,4 +19,18 @@ export const authenticate = async (
   } catch (err) {
     throw new UnauthorizedError('Invalid or expired token');
   }
+};
+
+export const authorize = (roles: string[]) => {
+  return async (req: FastifyRequest, reply: FastifyReply) => {
+    const user = req.user as { role: string };
+
+    if (!user || !user.role) {
+      throw new UnauthorizedError('User role not found');
+    }
+
+    if (!roles.includes(user.role)) {
+      throw new ForbiddenError('Access denied');
+    }
+  };
 };
