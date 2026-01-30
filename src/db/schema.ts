@@ -47,27 +47,34 @@ export const paymentStatusEnum = pgEnum('payment_status', [
   'REFUNDED',
 ]);
 
+// --- HELPER CHO TIMESTAMP (DRY code) --- //
+const timestamps = {
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at')
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+};
+
 // ------------ TABLES ------------ //
 /**
  * @USER
  */
 export const users = pgTable('users', {
-  id: text('id').primaryKey(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   verificationToken: text('verification_token'),
   verificationTokenExpires: timestamp('verification_token_expires'),
   avatarUrl: text('avatar_url'),
-  createAt: timestamp('create_at').defaultNow().notNull(),
   role: userRoleEnum('role').default('CUSTOMER'),
-  password: text('password').notNull(),
+  password: text('password'),
   resetPasswordToken: text('reset_password_token'),
   resetPasswordExpires: timestamp('reset_password_expires'),
-  updateAt: timestamp('update_at')
-    .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
-    .notNull(),
+  ...timestamps, //  ====> Use helper
 });
 
 export const refreshTokens = pgTable(
@@ -75,16 +82,13 @@ export const refreshTokens = pgTable(
   {
     id: text('id').primaryKey(),
     token: text('token').notNull().unique(),
-    createdAt: timestamp('created_at').defaultNow().notNull(),
-    updatedAt: timestamp('updated_at')
-      .$onUpdate(() => /* @__PURE__ */ new Date())
-      .notNull(),
-    expiresAt: timestamp('expires_at').notNull(),
     userId: text('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     revoked: boolean('revoked').default(false).notNull(),
     replacedByToken: text('replaced_by_token'),
+    expiresAt: timestamp('expires_at').notNull(),
+    ...timestamps, //  ====> Use helper
   },
   (table) => [index('refresh_token_userId_idx').on(table.userId)]
 );
@@ -93,7 +97,9 @@ export const refreshTokens = pgTable(
  * @PROFILE
  */
 export const profiles = pgTable('profiles', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   phone: text('phone').unique(),
@@ -118,7 +124,9 @@ export const addresses = pgTable('address', {
   postalCode: text('postal_code').notNull(),
   country: text('country').notNull(),
   isDefault: boolean('is_default').default(false),
-  userId: uuid('user_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
 });
 
 export const categories = pgTable(
@@ -131,19 +139,20 @@ export const categories = pgTable(
     slug: text('slug').unique().notNull(),
     parentId: text('parent_id'),
   },
-  (table) => ({
-    parentIdx: index('parent_idx').on(table.parentId),
-  })
+  (table) => [index('category_parent_idx').on(table.parentId)]
 );
 
 export const products = pgTable('product', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').unique().notNull(),
   description: text('description').notNull(),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updateAt: timestamp('update_at').$onUpdate(() => new Date()),
-  categoryId: text('category_id').notNull(),
+  categoryId: text('category_id')
+    .notNull()
+    .references(() => categories.id),
+  ...timestamps,
 });
 
 export const productVariants = pgTable(
@@ -155,30 +164,31 @@ export const productVariants = pgTable(
     sku: text('sku').unique().notNull(),
     price: doublePrecision('price').notNull(),
     stockQuantity: integer('stock_quantity').default(0),
-    productId: uuid('product_id').notNull(),
+    productId: text('product_id').notNull(),
   },
-  (table) => ({
-    productIdx: index('product_variant_product_idx').on(table.productId),
-  })
+  (table) => [index('product_variant_product_idx').on(table.productId)]
 );
 
 export const mediaFolders = pgTable('media_folder', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
   name: text('name').notNull(),
-  parentId: uuid('parent_id'),
+  parentId: text('parent_id'),
 });
 
 export const media = pgTable('media', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
   fileName: text('file_name').notNull(),
   url: text('url').notNull(),
   fileType: mediaTypeEnum('file_type').notNull(),
   size: integer('size').notNull(),
   altText: text('alt_text'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  folderId: uuid('folder_id'),
+  folderId: text('folder_id').references(() => mediaFolders.id),
   fileId: text('file_id'),
+  ...timestamps,
 });
 
 export const productImages = pgTable(
@@ -188,43 +198,64 @@ export const productImages = pgTable(
       .$defaultFn(() => cuid())
       .primaryKey(),
     displayOrder: integer('display_order').default(0),
-    productId: uuid('product_id').notNull(),
-    mediaId: uuid('media_id').unique().notNull(),
+    productId: text('product_id').notNull(),
+    mediaId: text('media_id').unique().notNull(),
   },
-  (table) => ({
-    productMediaUnique: unique().on(table.productId, table.mediaId),
-    productIdx: index('product_image_product_idx').on(table.productId),
-  })
+  (table) => [
+    unique().on(table.productId, table.mediaId),
+    index('product_image_product_idx').on(table.productId),
+  ]
 );
 
 export const attributes = pgTable(
   'attribute',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: text('id')
+      .$defaultFn(() => cuid())
+      .primaryKey(),
     name: text('name').notNull(),
   },
-  (table) => ({
-    nameUnique: unique().on(table.name),
-  })
+  (table) => [unique().on(table.name)]
 );
 
 export const attributeValues = pgTable(
   'attribute_value',
   {
-    id: uuid('id').defaultRandom().primaryKey(),
+    id: text('id')
+      .$defaultFn(() => cuid())
+      .primaryKey(),
     value: text('value').notNull(),
-    attributeId: uuid('attribute_id').notNull(),
+    attributeId: text('attribute_id')
+      .notNull()
+      .references(() => attributes.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    attributeValueUnique: unique().on(table.attributeId, table.value),
-  })
+  (table) => [unique().on(table.attributeId, table.value)]
+);
+
+// Junction table cho ProductVariant - AttributeValue (n-n)
+export const attributeValuesToVariants = pgTable(
+  'attribute_value_to_variant',
+  {
+    attributeValueId: text('attribute_value_id')
+      .notNull()
+      .references(() => attributeValues.id, { onDelete: 'cascade' }),
+    productVariantId: text('product_variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.attributeValueId, table.productVariantId] }),
+  ]
 );
 
 export const carts = pgTable('cart', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  createAt: timestamp('create_at').defaultNow().notNull(),
-  updateAt: timestamp('update_at').$onUpdate(() => new Date()),
-  userId: uuid('user_id').unique().notNull(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
+  userId: text('user_id')
+    .unique()
+    .references(() => users.id, { onDelete: 'cascade' }), // set null nếu muốn giữ cart khi user bị xóa (tùy logic)
+  ...timestamps,
 });
 
 export const cartItems = pgTable(
@@ -234,24 +265,29 @@ export const cartItems = pgTable(
       .$defaultFn(() => cuid())
       .primaryKey(),
     quantity: integer('quantity').notNull(),
-    cartId: uuid('cart_id').notNull(),
-    productVariantId: text('product_variant_id').notNull(),
+    cartId: text('cart_id')
+      .notNull()
+      .references(() => carts.id, { onDelete: 'cascade' }),
+    productVariantId: text('product_variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    cartVariantUnique: unique().on(table.cartId, table.productVariantId),
-  })
+  (table) => [unique().on(table.cartId, table.productVariantId)]
 );
 
 export const orders = pgTable('order', {
-  id: uuid('id').defaultRandom().primaryKey(),
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
   totalAmount: doublePrecision('total_amount').notNull(),
   status: orderStatusEnum('status').default('PENDING'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  userId: uuid('user_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id),
   shippingAddressId: text('shipping_address_id').notNull(),
   couponId: text('coupon_id'),
   discountAmount: doublePrecision('discount_amount').default(0),
+  ...timestamps,
 });
 
 export const orderItems = pgTable(
@@ -262,12 +298,14 @@ export const orderItems = pgTable(
       .primaryKey(),
     quantity: integer('quantity').notNull(),
     priceAtPurchase: doublePrecision('price_at_purchase').notNull(),
-    orderId: uuid('order_id').notNull(),
-    productVariantId: text('product_variant_id').notNull(),
+    orderId: text('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'restrict' }),
+    productVariantId: text('product_variant_id')
+      .notNull()
+      .references(() => productVariants.id, { onDelete: 'cascade' }),
   },
-  (table) => ({
-    orderVariantUnique: unique().on(table.orderId, table.productVariantId),
-  })
+  (table) => [unique().on(table.orderId, table.productVariantId)]
 );
 
 export const coupons = pgTable('coupon', {
@@ -289,9 +327,11 @@ export const payments = pgTable('payment', {
   status: paymentStatusEnum('status').default('PENDING'),
   method: text('method').notNull(),
   transactionId: text('transaction_id'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  updatedAt: timestamp('updated_at').$onUpdate(() => new Date()),
-  orderId: uuid('order_id').unique().notNull(),
+  orderId: text('order_id')
+    .unique()
+    .notNull()
+    .references(() => orders.id),
+  ...timestamps,
 });
 
 // Relations (phiên bản cũ - dễ dùng nhất)
@@ -351,24 +391,6 @@ export const productVariantsRelations = relations(
     attributes: many(attributeValuesToVariants), // junction table cho n-n
     cartItems: many(cartItems),
     orderItems: many(orderItems),
-  })
-);
-
-// Junction table cho ProductVariant - AttributeValue (n-n)
-export const attributeValuesToVariants = pgTable(
-  'attribute_value_to_variant',
-  {
-    attributeValueId: uuid('attribute_value_id')
-      .notNull()
-      .references(() => attributeValues.id, { onDelete: 'cascade' }),
-    productVariantId: text('product_variant_id')
-      .notNull()
-      .references(() => productVariants.id, { onDelete: 'cascade' }),
-  },
-  (table) => ({
-    pk: primaryKey({
-      columns: [table.attributeValueId, table.productVariantId],
-    }),
   })
 );
 

@@ -6,7 +6,6 @@ import { hashPassword } from '@/utils/jwt';
 import { eq } from 'drizzle-orm';
 import { ENV_CONFIG } from '@/config/env';
 import ms from 'ms';
-import { BrevoProvider } from '@/provider/brevo-provider';
 
 export class AuthRepository {
   private db: Database;
