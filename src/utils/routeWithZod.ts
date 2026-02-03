@@ -20,6 +20,7 @@ import {
 } from 'fastify';
 import { ZodSchema } from 'zod';
 import { zodValidate } from './zodValidate';
+import { authorize } from '@/middleware/auth.middleware';
 
 type HttpMethod =
   | 'get'
@@ -54,6 +55,8 @@ interface RouteWithZodOptions
   bodySchema?: ZodSchema;
   querySchema?: ZodSchema;
   paramsSchema?: ZodSchema;
+  /** Mảng các Role được phép truy cập. Nếu truyền vào, sẽ tự động check `authorize` */
+  roles?: string[];
 
   // Hook definitions (Tách riêng để tránh xung đột kiểu dữ liệu optional)
   preHandler?: NonNullable<RouteOptions['preHandler']>;
@@ -93,6 +96,7 @@ export function routeWithZod(
     preSerialization,
     onSend,
     onResponse,
+    roles,
     ...restOptions
   } = options;
 
@@ -100,6 +104,7 @@ export function routeWithZod(
   // Chúng ta validate dữ liệu thông qua mảng preHandler thay vì dùng
   // validatorCompiler mặc định để tránh xung đột với Swagger JSON Schema.
   const zodPreHandlers: any[] = [];
+  if (roles && roles.length > 0) zodPreHandlers.push(authorize(roles)); // <-- Tự động thêm authorize middleware
   if (bodySchema) zodPreHandlers.push(zodValidate(bodySchema, 'body'));
   if (querySchema) zodPreHandlers.push(zodValidate(querySchema, 'query'));
   if (paramsSchema) zodPreHandlers.push(zodValidate(paramsSchema, 'params'));

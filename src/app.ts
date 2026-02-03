@@ -13,6 +13,11 @@ import { zodErrorHandlerPlugin } from './middleware/zodErrorHandlerPlugin';
 import * as Sentry from '@sentry/node';
 import multipart from '@fastify/multipart';
 import databasePlugin from './plugins/database';
+import fastifyJwt from '@fastify/jwt';
+
+import fastifyCookie from '@fastify/cookie';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyRateLimit from '@fastify/rate-limit';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
@@ -28,7 +33,28 @@ export function buildServer() {
       },
       level: ENV_CONFIG.NODE_ENV === 'development' ? 'debug' : 'info',
     },
+    // Trust Proxy if behind Nginx/Cloudflare
+    trustProxy: true,
   }).withTypeProvider<ZodTypeProvider>();
+
+  // Security Plugins
+  server.register(fastifyHelmet);
+  server.register(fastifyRateLimit, {
+    max: 100,
+    timeWindow: '1 minute',
+  });
+  server.register(fastifyCookie, {
+    secret: ENV_CONFIG.COOKIE_SECRET, // for cookies signature
+    hook: 'onRequest',
+  });
+
+  // Register JWT
+  server.register(fastifyJwt, {
+    secret: ENV_CONFIG.ACCESS_TOKEN_SECRET_SIGNATURE,
+    sign: {
+      expiresIn: ENV_CONFIG.ACCESS_TOKEN_LIFE,
+    },
+  });
 
   Sentry.init({
     dsn: ENV_CONFIG.SENTRY_URL || '',
@@ -79,6 +105,15 @@ export function buildServer() {
       },
 
       servers: [{ url: ENV_CONFIG.BASE_URL }, { url: ENV_CONFIG.SERVER_URL }],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
     },
   });
 

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-import { sendResponseSuccess } from '@/utils/sendResponse';
+import { sendResponseError, sendResponseSuccess } from '@/utils/sendResponse';
 import { mediaFolderService } from './media-folder.service';
 import { MediaFolderRepository } from './media-folder.repository';
 import {
@@ -19,7 +19,7 @@ export const mediaFolderController = (fastify: FastifyInstance) => {
       reply: FastifyReply
     ) => {
       const newFolder = await service.createFolder(req.body!);
-      return sendResponseSuccess(201, reply, 'Success', newFolder);
+      return sendResponseSuccess(200, reply, 'Success', newFolder);
     },
 
     getAllHandler: async (req: FastifyRequest, reply: FastifyReply) => {
@@ -40,7 +40,7 @@ export const mediaFolderController = (fastify: FastifyInstance) => {
       reply: FastifyReply
     ) => {
       if (!req.params?.id) {
-        return sendResponseSuccess(400, reply, 'Missing required parameters');
+        return sendResponseError(404, reply, 'Missing id parameters');
       }
       const { id } = req.params;
       const result = await service.deleteFolder(id);

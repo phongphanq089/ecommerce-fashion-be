@@ -54,6 +54,12 @@ export class TooManyRequestsError extends AppError {
   }
 }
 
+export class BadRequestError extends AppError {
+  constructor(message: string = 'Bad request') {
+    super(message, 400);
+  }
+}
+
 //Unprocessable Entity (khi dữ liệu hợp lệ cú pháp, nhưng sai về ngữ nghĩa) vd:  Đã gửi OTP nhưng OTP hết hạn
 //Đã order nhưng sản phẩm hết hàng
 export class UnprocessableEntityError extends AppError {
