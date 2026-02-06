@@ -11,6 +11,8 @@ export function toMediaType(mimeType: string): MediaType {
       return 'IMAGE';
     case 'video':
       return 'VIDEO';
+    case 'audio':
+      return 'OTHER';
     case 'application': {
       if (mimeType.includes('pdf')) return 'DOCUMENT';
       return 'DOCUMENT';

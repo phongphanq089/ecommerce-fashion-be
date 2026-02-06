@@ -7,6 +7,7 @@ import {
   DeleteMediaMultipleInput,
   DeleteMediaSingleInput,
 } from './media-file.validation';
+import { LIMIT_COMMON_FILE_SIZE } from '@/constants';
 
 export const mediaController = (fastify: FastifyInstance) => {
   const repo = new MediaRepository(fastify.db);
@@ -43,7 +44,7 @@ export const mediaController = (fastify: FastifyInstance) => {
       try {
         const parts = req.files({
           limits: {
-            fileSize: 10 * 1024 * 1024, // 10MB limit example, adjust as needed or import constant
+            fileSize: LIMIT_COMMON_FILE_SIZE,
           },
         });
 
