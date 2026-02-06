@@ -69,9 +69,9 @@ interface RouteWithZodOptions
   /** Handler được định nghĩa lại để hỗ trợ Type-safe tốt hơn */
   handler: (
     req: FastifyRequest<{
-      Body?: any;
-      Querystring?: any;
-      Params?: any;
+      Body: any;
+      Querystring: any;
+      Params: any;
     }>,
     reply: FastifyReply
   ) => Promise<any> | any;

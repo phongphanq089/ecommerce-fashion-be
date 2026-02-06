@@ -1,5 +1,5 @@
 import z from 'zod';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { createSelectSchema } from 'drizzle-zod';
 import { users } from '@/db/schema';
 
 export const registerSchema = z.object({
@@ -39,7 +39,7 @@ export const verifyEmailSchema = z.object({
 
 export const resendVerifyEmailSchema = z.object({
   email: z.email({ message: 'Please enter valid email address' }),
-  urlRedirect: z.string().url().optional(),
+  urlRedirect: z.url().optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
