@@ -18,12 +18,10 @@ export const mediaController = (fastify: FastifyInstance) => {
       if (!file) return sendResponseError(400, reply, 'No file uploaded', null);
 
       try {
-        const fileBuffer = await fs.readFile(file.path);
-
         const folderId = ((req.query as any)?.folderId as string) || '';
 
         const media = await service.createMediaSingle({
-          fileBuffer,
+          file: file.file,
           fileName: file.originalname.split('.')[0],
           fileType: file.mimetype,
           altText: file.originalname,
@@ -39,23 +37,21 @@ export const mediaController = (fastify: FastifyInstance) => {
           'An error occurred during file processing',
           null
         );
-      } finally {
-        await fs.unlink(file.path);
       }
     },
     createMediaMultiple: async (req: FastifyRequest, reply: FastifyReply) => {
-      const files = (req as any).savedFiles;
-
-      if (!files || !Array.isArray(files) || files.length === 0) {
-        return sendResponseError(400, reply, 'No files uploaded', null);
-      }
-
       try {
+        const parts = req.files({
+          limits: {
+            fileSize: 10 * 1024 * 1024, // 10MB limit example, adjust as needed or import constant
+          },
+        });
+
         const { folderId } = req.query as {
           folderId?: string;
         };
 
-        const medias = await service.createMediaMultiple(files, folderId);
+        const medias = await service.createMediaMultiple(parts, folderId);
 
         return sendResponseSuccess(200, reply, 'Create media success', medias);
       } catch (error) {
@@ -66,15 +62,6 @@ export const mediaController = (fastify: FastifyInstance) => {
           'An error occurred during file processing',
           null
         );
-      } finally {
-        // Luôn dọn dẹp file tạm sau khi xử lý xong (kể cả khi lỗi)
-        const cleanupPromises = files.map((file: any) =>
-          fs.unlink(file.path).catch((err) => {
-            // Ghi lại lỗi nếu không xóa được file tạm, nhưng không làm crash tiến trình
-            console.error(`Failed to delete temporary file: ${file.path}`, err);
-          })
-        );
-        await Promise.all(cleanupPromises);
       }
     },
     getMedia: async (req: FastifyRequest, reply: FastifyReply) => {

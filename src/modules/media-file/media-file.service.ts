@@ -2,7 +2,6 @@ import { AppError, NotFoundError } from '@/utils/errors';
 import { uploadImageKitProvider } from '@/provider/uploadImageKitProvider';
 
 import { MediaRepository } from './media-file.repository';
-import fs from 'fs/promises';
 import { handleExternalCall } from '@/utils/handleExternalCall';
 import { toMediaType } from '@/utils/lib';
 import { DEFAULT_FOLDER_NAME } from '@/constants';
@@ -72,7 +71,7 @@ class MediaService {
     const uploadResult = await handleExternalCall(
       () =>
         uploadImageKitProvider.streamUpload(
-          data.fileBuffer,
+          data.file,
           data.fileName,
           'media-ak-shop'
         ),
@@ -107,38 +106,58 @@ class MediaService {
    * @param folderId (optional) ID thư mục
    * @returns Danh sách media record mới tạo
    */
-  async createMediaMultiple(files: MultiFileData[], folderId?: string) {
+  async createMediaMultiple(files: any, folderId?: string) {
     const folder = await this._getFolderForMedia(folderId);
-    const uploadPromises = files.map(async (file) => {
-      const fileBuffer = await fs.readFile(file.path);
-      const uploadResult = await handleExternalCall(
-        () =>
-          uploadImageKitProvider.streamUpload(
-            fileBuffer,
-            file.originalname.split('.')[0] as string,
-            'media-ak-shop'
-          ),
-        {
-          serviceName: 'Imagekit',
-          errorMessage: 'Failed to upload image.',
-        }
-      );
-      return { uploadResult, originalFile: file };
-    });
+
+    // Array to store upload promises
+    const uploadPromises: Promise<{
+      uploadResult: any;
+      originalFilename: string;
+      mimetype: string;
+    }>[] = [];
+
+    // Iterate over the parts and start uploads immediately
+    for await (const part of files) {
+      if (part.file) {
+        const uploadPromise = handleExternalCall(
+          () =>
+            uploadImageKitProvider.streamUpload(
+              part.file,
+              part.filename.split('.')[0] as string,
+              'media-ak-shop'
+            ),
+          {
+            serviceName: 'Imagekit',
+            errorMessage: 'Failed to upload image.',
+          }
+        ).then((uploadResult) => ({
+          uploadResult,
+          originalFilename: part.filename,
+          mimetype: part.mimetype,
+        }));
+
+        uploadPromises.push(uploadPromise);
+      }
+    }
 
     const uploadResults = await Promise.all(uploadPromises);
 
     const mediaToCreate = uploadResults.map(
-      ({ uploadResult, originalFile }) => ({
-        fileName: originalFile.originalname ?? `media-${Date.now()}`,
+      ({ uploadResult, originalFilename, mimetype }) => ({
+        fileName: originalFilename ?? `media-${Date.now()}`,
         url: uploadResult.url,
-        fileType: toMediaType(originalFile.mimetype),
+        fileType: toMediaType(mimetype),
         size: uploadResult.size,
-        altText: originalFile.originalname,
+        altText: originalFilename,
         folderId: folder.id,
         fileId: uploadResult.fileId,
       })
     );
+
+    if (mediaToCreate.length === 0) {
+      throw new AppError('No valid files uploaded', 400);
+    }
+
     const newMedia = await this.repo.createManyMedia(mediaToCreate);
 
     return newMedia;

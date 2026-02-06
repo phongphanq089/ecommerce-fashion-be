@@ -70,7 +70,6 @@ export default function mediaRoutes(fastify: FastifyInstance) {
         },
       },
     },
-    preHandler: [fileUploadMiddleware.multiple],
     handler: controller.createMediaMultiple,
   });
   routeWithZod(fastify, {

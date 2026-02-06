@@ -37,9 +37,7 @@ export const deleteMediaSingleSchema = z.object({
 });
 
 export const deleteMediaMultipleSchema = z.object({
-  Ids: z
-    .array(z.string().uuid('Invalid media ID'))
-    .min(1, 'At least one ID required'),
+  Ids: z.array(z.uuid('Invalid media ID')).min(1, 'At least one ID required'),
 });
 
 export type MediaCreateInput = z.infer<typeof mediaCreateSchema>;
@@ -48,8 +46,11 @@ export type DeleteMediaMultipleInput = z.infer<
   typeof deleteMediaMultipleSchema
 >;
 
+import { ReadStream } from 'fs';
+import { Readable } from 'stream';
+
 export interface CreateMediaDTO {
-  fileBuffer: Buffer;
+  file: Buffer | ReadStream | string | Readable;
   fileName: string;
   fileType: string;
   altText?: string;
@@ -57,7 +58,7 @@ export interface CreateMediaDTO {
 }
 
 export type MultiFileData = {
-  path: string;
+  file: Readable;
   filename: string;
   mimetype: string;
   originalname: string;
