@@ -1,17 +1,22 @@
 import { sendResponseError, sendResponseSuccess } from '@/utils/sendResponse';
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fs from 'fs/promises';
-import { mediaService } from './media-file.service';
-import { MediaRepository } from './media-file.repository';
+import { mediaService } from './media.service';
+import { MediaRepository } from './media.repository';
 import {
   DeleteMediaMultipleInput,
   DeleteMediaSingleInput,
-} from './media-file.validation';
+  MediaFolderCreateInput,
+  MediaFolderUpdateInput,
+} from './media.validation';
 
 export const mediaController = (fastify: FastifyInstance) => {
   const repo = new MediaRepository(fastify.db);
   const service = mediaService(repo);
   return {
+    // ============================================================================
+    // MEDIA FILE CONTROLLER
+    // ============================================================================
     createMediaSingle: async (req: FastifyRequest, reply: FastifyReply) => {
       const file = (req as any).savedFile;
 
@@ -100,40 +105,74 @@ export const mediaController = (fastify: FastifyInstance) => {
       req: FastifyRequest<{ Body?: DeleteMediaSingleInput }>,
       reply: FastifyReply
     ) => {
-      const body = {
-        Id: req.body?.Id,
-      };
-      if (!body.Id) {
+      const id = req.body?.id;
+      if (!id) {
         return sendResponseError(400, reply, 'No id provided', null);
       }
-      const result = await service.deleteMediaSingle(
-        body as DeleteMediaSingleInput
+      const result = await service.deleteMediaSingle({ id });
+      return sendResponseSuccess(
+        200,
+        reply,
+        'Media deleted successfully',
+        result
       );
-      return reply.send({
-        succes: true,
-        message: 'Media deleted successfully',
-        data: result,
-      });
     },
     deleteMediaMultiple: async (
       req: FastifyRequest<{ Body?: DeleteMediaMultipleInput }>,
       reply: FastifyReply
     ) => {
-      const body = {
-        Ids: req.body?.Ids,
-      };
-      if (!body.Ids || !Array.isArray(body.Ids) || body.Ids.length === 0) {
+      const ids = req.body?.ids;
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return sendResponseError(400, reply, 'No ids provided', null);
       }
-      const result = await service.deleteMediaMutiple(
-        body as DeleteMediaMultipleInput
-      );
+      const result = await service.deleteMediaMultiple({ ids });
 
-      return reply.send({
-        success: true,
-        message: 'Media deleted',
-        data: result,
-      });
+      return sendResponseSuccess(200, reply, 'Media deleted', result);
+    },
+    // ============================================================================
+    // MEDIA FOLDER CONTROLLER
+    // ============================================================================
+    createFolderHandler: async (
+      req: FastifyRequest<{ Body?: MediaFolderCreateInput }>,
+      reply: FastifyReply
+    ) => {
+      if (!req.body) {
+        return sendResponseError(400, reply, 'Missing body', null);
+      }
+      const newFolder = await service.createFolder(req.body!);
+      return sendResponseSuccess(200, reply, 'Success', newFolder);
+    },
+
+    getAllFoldersHandler: async (req: FastifyRequest, reply: FastifyReply) => {
+      const result = await service.getAllFoldersAsTree();
+      return sendResponseSuccess(200, reply, 'Success', result);
+    },
+
+    updateFolderHandler: async (
+      req: FastifyRequest<{ Body?: MediaFolderUpdateInput }>,
+      reply: FastifyReply
+    ) => {
+      if (!req.body) {
+        return sendResponseError(400, reply, 'Missing body', null);
+      }
+      const updatedFolder = await service.updateFolder(req.body!);
+      return sendResponseSuccess(200, reply, 'Success', updatedFolder);
+    },
+
+    deleteFolderHandler: async (
+      req: FastifyRequest<{ Params?: { id: string } }>,
+      reply: FastifyReply
+    ) => {
+      const id = req.params?.id;
+      if (!id) {
+        return sendResponseError(400, reply, 'Missing id parameters');
+      }
+      const result = await service.deleteFolder(id);
+      return sendResponseSuccess(
+        200,
+        reply,
+        `Remove ${result.name} successfully`
+      );
     },
   };
 };
