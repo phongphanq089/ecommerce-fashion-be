@@ -1,6 +1,12 @@
 import { Database } from '@/plugins/database';
-import { eq, count, inArray } from 'drizzle-orm';
+import { eq, count, inArray, and, isNull } from 'drizzle-orm';
 import * as schema from '@/db/schema';
+import {
+  MediaFolder,
+  MediaFolderCreateInput,
+  MediaFolderUpdateInput,
+  MediaFolderWithRelations,
+} from './media.validation';
 
 /**
  * Repository pattern cho Media và MediaFolder.
@@ -15,6 +21,9 @@ export class MediaRepository {
   constructor(db: Database) {
     this.db = db;
   }
+  // ============================================================================
+  // MEDIA FILE REPOSITORY
+  // ============================================================================
   /**
    * Tìm folder theo id
    * @param id - ID của folder
@@ -163,5 +172,62 @@ export class MediaRepository {
       .where(inArray(schema.media.id, ids))
       .returning();
     return { count: deletedRows.length };
+  }
+  // ============================================================================
+  // MEDIA FOLDER REPOSITORY
+  // ============================================================================
+  async create(data: MediaFolderCreateInput) {
+    return this.db
+      .insert(schema.mediaFolders)
+      .values(data)
+      .returning()
+      .then((rows) => rows[0]);
+  }
+  async findAll(): Promise<MediaFolder[]> {
+    return this.db.query.mediaFolders.findMany({
+      orderBy: (mediaFolders, { asc }) => asc(mediaFolders.name),
+      with: {
+        media: true,
+        children: true,
+      },
+    });
+  }
+  async findById(id: string): Promise<MediaFolderWithRelations | undefined> {
+    return this.db.query.mediaFolders.findFirst({
+      where: eq(schema.mediaFolders.id, id),
+      with: {
+        media: true,
+        children: true,
+      },
+    });
+  }
+  async findByNameAndParent(name: string, parentId: string | null) {
+    return this.db.query.mediaFolders.findFirst({
+      where: and(
+        eq(schema.mediaFolders.name, name),
+        parentId === null
+          ? isNull(schema.mediaFolders.parentId)
+          : eq(schema.mediaFolders.parentId, parentId)
+      ),
+    });
+  }
+  async update(
+    id: string,
+    data: Partial<MediaFolderUpdateInput>
+  ): Promise<MediaFolder> {
+    return this.db
+      .update(schema.mediaFolders)
+      .set(data)
+      .where(eq(schema.mediaFolders.id, id))
+      .returning()
+      .then((rows) => rows[0]!);
+  }
+
+  async delete(id: string): Promise<MediaFolder> {
+    return this.db
+      .delete(schema.mediaFolders)
+      .where(eq(schema.mediaFolders.id, id))
+      .returning()
+      .then((rows) => rows[0]!);
   }
 }
