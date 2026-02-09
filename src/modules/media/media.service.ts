@@ -1,7 +1,6 @@
-import { AppError, NotFoundError } from '@/utils/errors';
+import { AppError, ConflictError, NotFoundError } from '@/utils/errors';
 import { uploadImageKitProvider } from '@/provider/uploadImageKitProvider';
 
-import { MediaRepository } from './media-file.repository';
 import fs from 'fs/promises';
 import { handleExternalCall } from '@/utils/handleExternalCall';
 import { toMediaType } from '@/utils/lib';
@@ -10,8 +9,11 @@ import {
   CreateMediaDTO,
   DeleteMediaMultipleInput,
   DeleteMediaSingleInput,
+  MediaFolderCreateInput,
+  MediaFolderUpdateInput,
   MultiFileData,
-} from './media-file.validation';
+} from './media.validation';
+import { MediaRepository } from './media.repository';
 
 /**
  * MediaService
@@ -28,6 +30,9 @@ class MediaService {
   constructor(repo: MediaRepository) {
     this.repo = repo;
   }
+  // ============================================================================
+  // MEDIA FILE SERVICES
+  // ============================================================================
   /**
    * @private
    * Xác định thư mục để lưu media:
@@ -72,7 +77,7 @@ class MediaService {
     const uploadResult = await handleExternalCall(
       () =>
         uploadImageKitProvider.streamUpload(
-          data.fileBuffer,
+          data.file,
           data.fileName,
           'media-ak-shop'
         ),
@@ -107,38 +112,69 @@ class MediaService {
    * @param folderId (optional) ID thư mục
    * @returns Danh sách media record mới tạo
    */
-  async createMediaMultiple(files: MultiFileData[], folderId?: string) {
+  async createMediaMultiple(
+    files: AsyncIterableIterator<any>,
+    folderId?: string
+  ) {
     const folder = await this._getFolderForMedia(folderId);
-    const uploadPromises = files.map(async (file) => {
-      const fileBuffer = await fs.readFile(file.path);
-      const uploadResult = await handleExternalCall(
-        () =>
-          uploadImageKitProvider.streamUpload(
-            fileBuffer,
-            file.originalname.split('.')[0] as string,
-            'media-ak-shop'
-          ),
-        {
-          serviceName: 'Imagekit',
-          errorMessage: 'Failed to upload image.',
+    // Array to store upload promises
+    const uploadPromises: Promise<{
+      uploadResult: any;
+      originalFilename: string;
+      mimetype: string;
+    }>[] = [];
+
+    // Iterate over the parts and start uploads immediately
+    for await (const part of files) {
+      if (part.file) {
+        // Validate mimetype on the fly
+        const { ALLOW_COMMOM_FILE_TYPES_GALLERY } = await import('@/constants');
+        if (!ALLOW_COMMOM_FILE_TYPES_GALLERY.includes(part.mimetype)) {
+          // If one file fails, we could throw.
+          // But since we are processing a stream, throwing here stops processing subsequent files.
+          // For now, let's skip invalid files or throw?
+          // Throwing is safer for "all or nothing" logic but difficult with streams.
+          // Let's throw to be consistent with previous middleware behavior.
+          throw new AppError(`File type ${part.mimetype} is not allowed.`, 415);
         }
-      );
-      return { uploadResult, originalFile: file };
-    });
 
+        const uploadPromise = handleExternalCall(
+          () =>
+            uploadImageKitProvider.streamUpload(
+              part.file,
+              part.filename.split('.')[0] as string,
+              'media-ak-shop'
+            ),
+          {
+            serviceName: 'Imagekit',
+            errorMessage: 'Failed to upload image.',
+          }
+        ).then((uploadResult) => ({
+          uploadResult,
+          originalFilename: part.filename,
+          mimetype: part.mimetype,
+        }));
+
+        uploadPromises.push(uploadPromise);
+      }
+    }
     const uploadResults = await Promise.all(uploadPromises);
-
     const mediaToCreate = uploadResults.map(
-      ({ uploadResult, originalFile }) => ({
-        fileName: originalFile.originalname ?? `media-${Date.now()}`,
+      ({ uploadResult, originalFilename, mimetype }) => ({
+        fileName: originalFilename ?? `media-${Date.now()}`,
         url: uploadResult.url,
-        fileType: toMediaType(originalFile.mimetype),
+        fileType: toMediaType(mimetype),
         size: uploadResult.size,
-        altText: originalFile.originalname,
+        altText: originalFilename,
         folderId: folder.id,
         fileId: uploadResult.fileId,
       })
     );
+
+    if (mediaToCreate.length === 0) {
+      throw new AppError('No valid files uploaded', 400);
+    }
+
     const newMedia = await this.repo.createManyMedia(mediaToCreate);
 
     return newMedia;
@@ -151,11 +187,7 @@ class MediaService {
    * @param limit (default = 20) số lượng media / trang
    * @returns { data: Media[], pagination: { total, page, limit } }
    */
-  async getMediaList(
-    folderId?: string,
-    page: number = 1,
-    limit: number = 20
-  ): Promise<any> {
+  async getMediaList(folderId?: string, page: number = 1, limit: number = 20) {
     return await this.repo.findMedia(folderId, page, limit);
   }
   /**
@@ -172,15 +204,14 @@ class MediaService {
    * @returns ID media đã xoá
    */
   async deleteMediaSingle(data: DeleteMediaSingleInput) {
-    const media = await this.repo.findUniqueMedia(data.Id);
+    const media = await this.repo.findUniqueMedia(data.id);
 
     if (!media) throw new NotFoundError('Media not found');
 
     if (!media?.fileId)
       throw new AppError('Media record is corrupted: fileId is missing', 500);
 
-    //await this.repo.deleteMediaSingle(data.Id);
-    await this.repo.deleteMediaSingle(data.Id);
+    await this.repo.deleteMediaSingle(data.id);
 
     //// Sau đó xóa file trên ImageKit (nếu fail thì log, không throw)
     await handleExternalCall(
@@ -204,17 +235,17 @@ class MediaService {
    * 4. Với mỗi fileId còn tồn tại → gọi ImageKit API xoá file vật lý
    * 5. Trả về số lượng media xoá thành công
    *
-   * @param data { Ids: string[] } - Danh sách ID media cần xoá
+   * @param data { ids: string[] } - Danh sách ID media cần xoá
    * @returns { count: number, message: string }
    */
-  async deleteMediaMutiple(data: DeleteMediaMultipleInput) {
-    const { Ids } = data;
+  async deleteMediaMultiple(data: DeleteMediaMultipleInput) {
+    const { ids } = data;
 
-    if (!Ids || Ids.length === 0) {
+    if (!ids || ids.length === 0) {
       return { count: 0, message: 'No IDs provided to delete.' };
     }
 
-    const mediasToDelete = await this.repo.findManyMediaByIds(Ids);
+    const mediasToDelete = await this.repo.findManyMediaByIds(ids);
 
     if (mediasToDelete.length === 0) {
       throw new NotFoundError('None of the provided IDs match any media.');
@@ -224,7 +255,7 @@ class MediaService {
       .map((media) => media.fileId)
       .filter((fileId): fileId is string => !!fileId);
 
-    const deleteResult = await this.repo.deleteMediaMultiple(Ids);
+    const deleteResult = await this.repo.deleteMediaMultiple(ids);
 
     if (fileIdsToDelete.length > 0) {
       const deletePromises = fileIdsToDelete.map(async (fileId) => {
@@ -244,6 +275,57 @@ class MediaService {
       count: deleteResult.count,
       message: `${deleteResult.count} media item(s) deleted successfully.`,
     };
+  }
+  // ============================================================================
+  // MEDIA FOLDER SERVICES
+  // ============================================================================
+  async createFolder(data: MediaFolderCreateInput) {
+    // Business logic: Không cho tạo folder trùng tên trong cùng một cấp
+    const existing = await this.repo.findByNameAndParent(
+      data.name,
+      data.parentId || null
+    );
+    if (existing) {
+      throw new ConflictError(
+        'A folder with this name already exists at this level.'
+      );
+    }
+    return this.repo.create(data);
+  }
+  async getAllFoldersAsTree() {
+    const allFolders = await this.repo.findAll();
+
+    return allFolders;
+  }
+  async updateFolder(data: MediaFolderUpdateInput) {
+    const folder = await this.repo.findById(data.id);
+    if (!folder) {
+      throw new NotFoundError('Folder not found');
+    }
+    if (data.name && data.name !== folder.name) {
+      const existing = await this.repo.findByNameAndParent(
+        data.name,
+        folder.parentId
+      );
+      if (existing) {
+        throw new ConflictError(
+          'A folder with this name already exists at this level.'
+        );
+      }
+    }
+    return this.repo.update(data.id, data);
+  }
+  async deleteFolder(id: string) {
+    const folder = await this.repo.findById(id);
+    if (!folder) {
+      throw new NotFoundError('Folder not found');
+    }
+
+    if (folder.media.length > 0 || folder.children.length > 0) {
+      throw new AppError('Cannot delete a non-empty folder.', 400);
+    }
+
+    return this.repo.delete(id);
   }
 }
 

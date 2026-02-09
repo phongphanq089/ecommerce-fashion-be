@@ -1,13 +1,18 @@
 // ===================================
 // FILE UPLOAD CONSTANTS
 // ===================================
-export const LIMIT_COMMON_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+export const LIMIT_COMMON_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
 
 export const ALLOW_COMMOM_FILE_TYPES_GALLERY = [
   'image/jpeg',
   'image/png',
   'image/gif',
   'image/webp',
+  'video/mp4',
+  'video/mpeg',
+  'video/webm',
+  'audio/mpeg',
+  'audio/wav',
 ];
 
 export const DEFAULT_FOLDER_NAME = 'Default Folder';

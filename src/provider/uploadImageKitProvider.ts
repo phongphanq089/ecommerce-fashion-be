@@ -7,8 +7,11 @@ const imagekit = new ImageKit({
   urlEndpoint: ENV_CONFIG.IMAGE_KIT_URLENDOINT,
 });
 
+import { ReadStream } from 'fs';
+import { Readable } from 'stream';
+
 interface StreamUploadParams {
-  fileBuffer: Buffer;
+  file: string | Buffer | ReadStream | Readable;
   fileName: string;
   folderName: string;
 }
@@ -23,13 +26,13 @@ interface ImageKitUploadResponse {
 }
 
 const streamUpload = async (
-  fileBuffer: Buffer,
+  file: string | Buffer | ReadStream | Readable,
   fileName: string,
   folderName: string,
   tags: string[] = []
 ): Promise<ImageKitUploadResponse> => {
   const result = await imagekit.upload({
-    file: fileBuffer,
+    file: file as any, // Cast to any to allow Readable stream which works at runtime
     fileName: `product-${fileName}`,
     folder: folderName,
     tags,
