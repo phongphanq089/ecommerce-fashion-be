@@ -1,5 +1,7 @@
 import { media, mediaFolders } from '@/db/schema';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+import { ReadStream } from 'fs';
+import { Readable } from 'stream';
 import { z } from 'zod';
 
 // ============================================================================
@@ -7,7 +9,7 @@ import { z } from 'zod';
 // ============================================================================
 
 export interface CreateMediaDTO {
-  fileBuffer: Buffer;
+  file: Buffer | ReadStream | string | Readable;
   fileName: string;
   fileType: string;
   altText?: string;
@@ -15,10 +17,9 @@ export interface CreateMediaDTO {
 }
 
 export type MultiFileData = {
-  path: string;
-  filename: string;
+  file: Readable;
   mimetype: string;
-  originalname: string;
+  filename: string;
 };
 
 // ============================================================================
