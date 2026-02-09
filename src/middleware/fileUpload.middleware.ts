@@ -29,33 +29,9 @@ async function processSingleFile(req: FastifyRequest, reply: FastifyReply) {
 }
 
 async function processMultipleFiles(req: FastifyRequest, reply: FastifyReply) {
-  const savedFiles = [];
-
-  const parts = req.files({
-    limits: {
-      fileSize: LIMIT_COMMON_FILE_SIZE,
-    },
-  });
-
-  for await (const part of parts) {
-    // Kiểm tra định dạng file
-    if (!ALLOW_COMMOM_FILE_TYPES_GALLERY.includes(part.mimetype)) {
-      throw new AppError(`File type ${part.mimetype} is not allowed.`, 415);
-    }
-
-    savedFiles.push({
-      file: part.file, // This is a Readable stream
-      originalname: part.filename,
-      mimetype: part.mimetype,
-    });
+  if (!req.isMultipart()) {
+    throw new AppError('Request is not multipart', 400);
   }
-
-  if (savedFiles.length === 0) {
-    throw new AppError('No valid files uploaded.', 400);
-  }
-
-  // Gắn mảng các file streams đã lưu vào request
-  (req as any).savedFiles = savedFiles;
 }
 
 export const fileUploadMiddleware = {
