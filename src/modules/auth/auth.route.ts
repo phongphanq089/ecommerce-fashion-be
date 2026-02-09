@@ -10,6 +10,7 @@ import {
   resendVerifyEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  googleLoginSchema,
 } from './auth.validation';
 import { ROLE_NAME } from '@/constants';
 
@@ -39,6 +40,12 @@ export const authRoutes = (fastify: FastifyInstance) => {
     },
     bodySchema: registerSchema,
     handler: controller.registerHandler,
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute',
+      },
+    },
   });
   routeWithZod(fastify, {
     method: 'post',
@@ -59,6 +66,12 @@ export const authRoutes = (fastify: FastifyInstance) => {
     },
     bodySchema: loginSchema,
     handler: controller.loginHandler,
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 minute',
+      },
+    },
   });
   routeWithZod(fastify, {
     method: 'post',
@@ -159,6 +172,12 @@ export const authRoutes = (fastify: FastifyInstance) => {
     },
     bodySchema: forgotPasswordSchema,
     handler: controller.forgotPasswordHandler,
+    config: {
+      rateLimit: {
+        max: 3,
+        timeWindow: '1 minute',
+      },
+    },
   });
 
   routeWithZod(fastify, {
@@ -202,5 +221,25 @@ export const authRoutes = (fastify: FastifyInstance) => {
     handler: async (req, reply) => {
       return 'Users fetched successfully';
     },
+  });
+  routeWithZod(fastify, {
+    method: 'post',
+    url: '/google',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [AUTH_TAG],
+      summary: 'Google Login',
+      description: 'Login with Google ID Token',
+      body: {
+        type: 'object',
+        required: ['idToken'],
+        properties: {
+          idToken: { type: 'string' },
+          urlRedirect: { type: 'string', format: 'url', nullable: true },
+        },
+      },
+    },
+    bodySchema: googleLoginSchema,
+    handler: controller.googleLoginHandler,
   });
 };

@@ -52,7 +52,12 @@ export class AuthService {
     return user;
   }
 
-  async login(server: FastifyInstance, data: LoginInput) {
+  async login(
+    server: FastifyInstance,
+    data: LoginInput,
+    userAgent?: string,
+    ip?: string
+  ) {
     const findUserByEmail = await this.repo.findUserByEmail(data.email);
 
     if (!findUserByEmail) {
@@ -80,7 +85,11 @@ export class AuthService {
       role: findUserByEmail.role,
     });
 
-    const refreshToken = await this.repo.createRefreshToken(findUserByEmail.id);
+    const refreshToken = await this.repo.createRefreshToken(
+      findUserByEmail.id,
+      userAgent,
+      ip
+    );
     return {
       accessToken,
       refreshToken,
@@ -90,6 +99,86 @@ export class AuthService {
         name: findUserByEmail.name,
         role: findUserByEmail.role,
         avatarUrl: findUserByEmail.avatarUrl,
+      },
+    };
+  }
+
+  async googleLogin(
+    server: FastifyInstance,
+    idToken: string,
+    userAgent?: string,
+    ip?: string
+  ) {
+    // 1. Verify Google Token
+    const googleResponse = await fetch(
+      `https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`
+    );
+
+    if (!googleResponse.ok) {
+      throw new UnauthorizedError('Invalid Google Token');
+    }
+
+    const googleUser = (await googleResponse.json()) as {
+      sub: string;
+      email: string;
+      name: string;
+      picture: string;
+      aud: string;
+    };
+
+    if (googleUser.aud !== ENV_CONFIG.GOOGLE_CLIENT_ID) {
+      throw new UnauthorizedError('Token is not for this application');
+    }
+
+    // 2. Find user by Google ID or Email
+    let user = await this.repo.findUserByGoogleId(googleUser.sub);
+    if (!user) {
+      user = await this.repo.findUserByEmail(googleUser.email);
+      if (user) {
+        // Link Google ID to existing user
+        await this.repo.updateUser({ ...user, googleId: googleUser.sub });
+      } else {
+        // Create new user
+        // Generate random password for google user
+        const randomPassword = crypto.randomBytes(16).toString('hex');
+        user = (await this.repo.createUser({
+          email: googleUser.email,
+          name: googleUser.name,
+          password: randomPassword,
+          avatarUrl: googleUser.picture,
+          googleId: googleUser.sub,
+          emailVerified: true, // Google emails are verified
+        })) as any; // Cast because transaction result might be array
+
+        // Handle array return from transaction if createUser returns array
+        if (Array.isArray(user)) {
+          user = user[0];
+        }
+      }
+    }
+
+    // 3. Generate Tokens
+    const accessToken = server.jwt.sign({
+      id: user!.id,
+      email: user!.email,
+      role: user!.role,
+    });
+
+    const refreshToken = await this.repo.createRefreshToken(
+      user!.id,
+      userAgent,
+      ip
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user!.id,
+        email: user!.email,
+        name: user!.name,
+        role: user!.role,
+        avatarUrl: user!.avatarUrl,
       },
     };
   }
@@ -105,7 +194,12 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
-  async refresh(server: FastifyInstance, refreshToken: string) {
+  async refresh(
+    server: FastifyInstance,
+    refreshToken: string,
+    userAgent?: string,
+    ip?: string
+  ) {
     const findRefreshToken = await this.repo.findRefreshToken(refreshToken);
 
     if (!findRefreshToken) {
@@ -149,6 +243,8 @@ export class AuthService {
         token: newRefreshToken,
         userId: findRefreshToken.userId,
         expiresAt: newExpiresAt,
+        userAgent,
+        ip,
       });
     });
 
