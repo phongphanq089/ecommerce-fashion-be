@@ -42,8 +42,14 @@ export const resendVerifyEmailSchema = z.object({
   urlRedirect: z.string().url().optional(),
 });
 
+export const googleLoginSchema = z.object({
+  idToken: z.string().min(1, 'Google ID Token is required'),
+  urlRedirect: z.string().url().optional(),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
 export type GetMeInput = z.infer<typeof getMeSchema>;
 export type LogoutInput = z.infer<typeof logoutSchema>;
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;

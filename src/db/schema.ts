@@ -74,6 +74,7 @@ export const users = pgTable('users', {
   password: text('password'),
   resetPasswordToken: text('reset_password_token'),
   resetPasswordExpires: timestamp('reset_password_expires'),
+  googleId: text('google_id').unique(),
   ...timestamps, //  ====> Use helper
 });
 
@@ -88,6 +89,8 @@ export const refreshTokens = pgTable(
     revoked: boolean('revoked').default(false).notNull(),
     replacedByToken: text('replaced_by_token'),
     expiresAt: timestamp('expires_at').notNull(),
+    userAgent: text('user_agent'),
+    ip: text('ip'),
     ...timestamps, //  ====> Use helper
   },
   (table) => [index('refresh_token_userId_idx').on(table.userId)]

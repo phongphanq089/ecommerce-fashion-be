@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+  <title>Terminal Beats - Main Interface</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600;700&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#06b6d4", // Cyan
+            secondary: "#d946ef", // Magenta
+            "background-light": "#e2e8f0", // Slate-200
+            "background-dark": "#0f172a", // Slate-900 (Deep Charcoal)
+            "surface-dark": "#1e293b", // Slate-800
+            "surface-light": "#f1f5f9", // Slate-100
+          },
+          fontFamily: {
+            display: ["'Fira Code'", "monospace"],
+            mono: ["'Fira Code'", "monospace"],
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+          },
+          backgroundImage: {
+            'grid-pattern': "linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px)",
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'spin-slow': 'spin 8s linear infinite',
+          }
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Fira Code', monospace;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    .neon-glow-cyan {
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.3), 0 0 20px rgba(6, 182, 212, 0.1);
+    }
+
+    .neon-glow-magenta {
+      box-shadow: 0 0 10px rgba(217, 70, 239, 0.3), 0 0 20px rgba(217, 70, 239, 0.1);
+    }
+
+    .scanlines {
+      background: linear-gradient(to bottom,
+          rgba(255, 255, 255, 0),
+          rgba(255, 255, 255, 0) 50%,
+          rgba(0, 0, 0, 0.1) 50%,
+          rgba(0, 0, 0, 0.1));
+      background-size: 100% 4px;
+      position: fixed;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+    }
+
+    .eq-bar {
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+
+    .eq-bar:nth-child(1) {
+      animation-delay: -0.4s;
+      height: 40%;
+    }
+
+    .eq-bar:nth-child(2) {
+      animation-delay: -0.2s;
+      height: 70%;
+    }
+
+    .eq-bar:nth-child(3) {
+      animation-delay: -0.5s;
+      height: 50%;
+    }
+
+    .eq-bar:nth-child(4) {
+      animation-delay: -0.1s;
+      height: 80%;
+    }
+
+    .eq-bar:nth-child(5) {
+      animation-delay: -0.3s;
+      height: 60%;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      100% {
+        transform: scaleY(0.5);
+      }
+
+      50% {
+        transform: scaleY(1.2);
+      }
+    }
+  </style>
+</head>
+
+<body
+  class="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 h-screen w-screen overflow-hidden flex flex-col relative transition-colors duration-300">
+  <div class="scanlines opacity-20 pointer-events-none hidden dark:block"></div>
+  <div class="absolute inset-0 z-0 opacity-10 pointer-events-none"
+    style="background-size: 40px 40px; background-image: linear-gradient(to right, #64748b 1px, transparent 1px), linear-gradient(to bottom, #64748b 1px, transparent 1px);">
+  </div>
+  <header
+    class="h-12 border-b border-slate-300 dark:border-slate-700 bg-surface-light/80 dark:bg-surface-dark/90 backdrop-blur-md flex items-center justify-between px-4 z-20 shrink-0">
+    <div class="flex items-center space-x-4">
+      <div class="flex space-x-2">
+        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+      </div>
+      <div class="text-xs font-bold tracking-widest text-primary dark:text-primary uppercase flex items-center">
+        <span class="material-icons-round text-sm mr-1">terminal</span>
+        Terminal Beats <span class="text-slate-400 mx-2">v2.0.4</span>
+      </div>
+    </div>
+    <div class="flex items-center space-x-6 text-xs">
+      <button class="hover:text-primary transition-colors flex items-center gap-1">
+        <span class="material-icons-round text-sm">wifi</span>
+        CONNECTED
+      </button>
+      <button class="hover:text-primary transition-colors flex items-center gap-1">
+        <span class="material-icons-round text-sm">memory</span>
+        MEM: 45%
+      </button>
+      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-secondary p-0.5">
+        <img alt="User Profile" class="w-full h-full rounded-full object-cover"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPKWD2Pa0cKr0-Pgh5VQtAdH28t9pRRBhO3YSrPVYgZoByqenrvdSrpQom2Jo01b6gbFoKtawIA1I5hPTHIcRjA0C0ag2QEOlfNz84F1gGeSZIZDIc47ibz1QUi1bh4n4ArvUe5ifhdNkb4ufIsMLYMB6n_ADqtkAyZTQPhQRjfe8oTwThS9lWgdqg5tM5d7BWfRpj__LhMIeJvit8OhWvi-tuMtfQpDEvXwod84Rvvsb9QiMGuQ_WfanAIZVFPD900YKBNjB-Sr0" />
+      </div>
+    </div>
+  </header>
+  <div class="flex flex-1 overflow-hidden z-10">
+    <aside
+      class="w-64 border-r border-slate-300 dark:border-slate-700 bg-surface-light/50 dark:bg-surface-dark/50 flex flex-col shrink-0 backdrop-blur-sm">
+      <div class="p-3 border-b border-slate-300 dark:border-slate-700 flex justify-between items-center">
+        <h2 class="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Explorer</h2>
+        <span class="material-icons-round text-slate-400 text-sm cursor-pointer hover:text-white">more_horiz</span>
+      </div>
+      <div class="flex-1 overflow-y-auto p-2 space-y-1">
+        <div class="mb-4">
+          <button
+            class="flex items-center w-full text-left px-2 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded mb-1">
+            <span class="material-icons-round text-sm mr-1 transition-transform rotate-90">arrow_right</span>
+            <span class="font-bold">LOFI_GIRL_RECORDS</span>
+          </button>
+          <div class="ml-4 pl-2 border-l border-slate-300 dark:border-slate-600 space-y-0.5">
+            <button
+              class="group flex items-center w-full px-2 py-1.5 text-xs text-primary bg-primary/10 rounded cursor-pointer neon-glow-cyan border border-primary/20">
+              <span class="material-icons-round text-sm mr-2 text-primary">folder_open</span>
+              <span>chill_study_beats</span>
+              <span class="ml-auto text-[10px] text-primary/70 opacity-0 group-hover:opacity-100">PLAYING</span>
+            </button>
+            <button
+              class="group flex items-center w-full px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-secondary dark:hover:text-secondary hover:bg-slate-200 dark:hover:bg-slate-700/30 rounded cursor-pointer transition-colors">
+              <span class="material-icons-round text-sm mr-2 group-hover:text-secondary">folder</span>
+              <span>synthwave_dreams</span>
+            </button>
+            <button
+              class="group flex items-center w-full px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-secondary dark:hover:text-secondary hover:bg-slate-200 dark:hover:bg-slate-700/30 rounded cursor-pointer transition-colors">
+              <span class="material-icons-round text-sm mr-2 group-hover:text-secondary">folder</span>
+              <span>coding_night</span>
+            </button>
+          </div>
+        </div>
+        <div class="mb-4">
+          <button
+            class="flex items-center w-full text-left px-2 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded mb-1">
+            <span class="material-icons-round text-sm mr-1 transition-transform">arrow_right</span>
+            <span class="font-bold">USER_PLAYLISTS</span>
+          </button>
+          <div class="ml-4 pl-2 border-l border-slate-300 dark:border-slate-600 space-y-0.5 hidden">
+          </div>
+        </div>
+        <div>
+          <button
+            class="flex items-center w-full text-left px-2 py-1 text-xs text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700/50 rounded mb-1">
+            <span class="material-icons-round text-sm mr-1 transition-transform rotate-90">arrow_right</span>
+            <span class="font-bold">DEPENDENCIES</span>
+          </button>
+          <div class="ml-4 pl-2 border-l border-slate-300 dark:border-slate-600 space-y-0.5">
+            <button
+              class="group flex items-center w-full px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-secondary dark:hover:text-secondary hover:bg-slate-200 dark:hover:bg-slate-700/30 rounded cursor-pointer transition-colors">
+              <span class="material-icons-round text-sm mr-2 group-hover:text-secondary">extension</span>
+              <span>rain_sounds.mod</span>
+            </button>
+            <button
+              class="group flex items-center w-full px-2 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-secondary dark:hover:text-secondary hover:bg-slate-200 dark:hover:bg-slate-700/30 rounded cursor-pointer transition-colors">
+              <span class="material-icons-round text-sm mr-2 group-hover:text-secondary">extension</span>
+              <span>keyboard_asmr.mod</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="p-3 border-t border-slate-300 dark:border-slate-700 bg-slate-200 dark:bg-slate-800/50">
+        <div class="flex items-center justify-between text-[10px] text-slate-500 mb-1">
+          <span>CPU: 12%</span>
+          <span>RAM: 8GB</span>
+        </div>
+        <div class="h-1 w-full bg-slate-300 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div class="h-full bg-primary w-1/3 animate-pulse"></div>
+        </div>
+      </div>
+    </aside>
+    <main class="flex-1 flex flex-col relative overflow-y-auto">
+      <div
+        class="flex border-b border-slate-300 dark:border-slate-700 bg-surface-light dark:bg-surface-dark h-9 items-end px-2">
+        <div
+          class="px-4 py-2 bg-slate-100 dark:bg-background-dark border-t border-l border-r border-slate-300 dark:border-slate-700 text-xs text-primary border-b-background-dark rounded-t mr-1 flex items-center">
+          <span class="material-icons-round text-sm mr-2">music_note</span>
+          now_playing.js
+          <span class="ml-3 hover:text-red-400 cursor-pointer">×</span>
+        </div>
+        <div
+          class="px-4 py-2 text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800/50 text-xs rounded-t mr-1 flex items-center cursor-pointer transition-colors">
+          <span class="material-icons-round text-sm mr-2">code</span>
+          config.json
+        </div>
+        <div
+          class="px-4 py-2 text-slate-500 dark:text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800/50 text-xs rounded-t mr-1 flex items-center cursor-pointer transition-colors">
+          <span class="material-icons-round text-sm mr-2">info</span>
+          README.md
+        </div>
+      </div>
+      <div class="flex-1 p-8 flex flex-col items-center justify-center relative">
+        <div
+          class="relative w-full max-w-2xl bg-surface-light dark:bg-surface-dark/40 border border-slate-300 dark:border-slate-700 rounded-xl p-6 backdrop-blur-xl shadow-2xl neon-glow-cyan flex flex-col md:flex-row gap-8 items-center z-10">
+          <div class="relative group shrink-0">
+            <div
+              class="absolute -inset-1 bg-gradient-to-r from-primary to-secondary rounded-lg blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200">
+            </div>
+            <div class="relative w-64 h-64 rounded-lg overflow-hidden border-2 border-slate-700 shadow-xl bg-black">
+              <img alt="Anime girl relaxing in a messy room with retro tech vibes, lo-fi aesthetic"
+                class="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-700"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRcNU4Y-LPx_AcgyfSr5S2RFzmFvYA6O39sjIJTvtuw24u1tECpjdeks0L_gQr3gfOmNH2JZheI0izGUzXOzqrJ4tEI2Si-yE5ibsE639OxKdCInD5UBnjKLDhAD37zSJNVVV9ASn6fKF7QPa_nSCAfR60FOKSTSLTwFOfLMJ28Z_WupCOoaK0IjtaVEM0Ep98zubz4dHJDrKM1bzQXTtcRk7oJdIzQC89AuZVBix02FMu7qq6b4zhv0tW057r3gomaGfQWHxd3uk" />
+              <div
+                class="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer">
+                <span class="material-icons-round text-6xl text-white drop-shadow-lg">play_circle_filled</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex-1 w-full space-y-6">
+            <div class="space-y-1">
+              <div class="flex items-center space-x-2 text-secondary text-xs font-bold uppercase tracking-widest">
+                <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                <span>Playing from: Chill_Study_Beats</span>
+              </div>
+              <h1 class="text-3xl font-bold text-slate-800 dark:text-white truncate">Night City Coding</h1>
+              <p class="text-lg text-slate-500 dark:text-slate-400 font-light">Lofi Coder • Synthwave Dreams</p>
+            </div>
+            <div class="space-y-2 font-mono text-xs">
+              <div class="flex justify-between text-slate-400">
+                <span>02:14</span>
+                <span>04:20</span>
+              </div>
+              <div
+                class="relative h-2 bg-slate-300 dark:bg-slate-700 rounded-full overflow-hidden cursor-pointer group">
+                <div class="absolute top-0 left-0 h-full bg-primary w-[45%] group-hover:bg-cyan-400 transition-colors">
+                </div>
+                <div
+                  class="absolute top-1/2 -translate-y-1/2 left-[45%] w-3 h-3 bg-white rounded-full shadow opacity-0 group-hover:opacity-100 transition-opacity">
+                </div>
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-600 truncate">
+                &gt; processing audio buffer... stream_quality: <span class="text-green-500">high</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+              <button class="text-slate-400 hover:text-white transition-colors">
+                <span class="material-icons-round text-2xl">shuffle</span>
+              </button>
+              <div class="flex items-center space-x-6">
+                <button class="text-slate-300 hover:text-primary transition-colors">
+                  <span class="material-icons-round text-4xl">skip_previous</span>
+                </button>
+                <button
+                  class="w-14 h-14 rounded-full bg-white text-background-dark flex items-center justify-center hover:bg-primary hover:text-white transition-all shadow-lg hover:shadow-cyan-500/50">
+                  <span class="material-icons-round text-4xl">pause</span>
+                </button>
+                <button class="text-slate-300 hover:text-primary transition-colors">
+                  <span class="material-icons-round text-4xl">skip_next</span>
+                </button>
+              </div>
+              <button class="text-slate-400 hover:text-secondary transition-colors">
+                <span class="material-icons-round text-2xl">favorite_border</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div
+          class="absolute bottom-10 left-10 text-slate-200 dark:text-slate-800 text-9xl font-bold opacity-20 pointer-events-none select-none z-0">
+          BEATS
+        </div>
+      </div>
+    </main>
+    <aside
+      class="w-72 border-l border-slate-300 dark:border-slate-700 bg-surface-light dark:bg-[#0c1220] flex flex-col shrink-0">
+      <div class="flex border-b border-slate-300 dark:border-slate-700 h-9">
+        <button
+          class="flex-1 text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-200 dark:bg-slate-800 border-r border-slate-300 dark:border-slate-700">TERMINAL</button>
+        <button
+          class="flex-1 text-xs font-bold text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50">DEBUG
+          CONSOLE</button>
+      </div>
+      <div class="flex-1 p-4 overflow-y-auto font-mono text-xs space-y-4">
+        <div class="h-32 bg-black rounded border border-slate-700 p-2 flex items-end justify-center gap-1 opacity-80">
+          <div class="w-2 bg-primary rounded-t eq-bar"></div>
+          <div class="w-2 bg-secondary rounded-t eq-bar"></div>
+          <div class="w-2 bg-primary rounded-t eq-bar"></div>
+          <div class="w-2 bg-cyan-300 rounded-t eq-bar"></div>
+          <div class="w-2 bg-secondary rounded-t eq-bar"></div>
+          <div class="w-2 bg-primary rounded-t eq-bar"></div>
+          <div class="w-2 bg-cyan-600 rounded-t eq-bar"></div>
+          <div class="w-2 bg-secondary rounded-t eq-bar"></div>
+          <div class="w-2 bg-primary rounded-t eq-bar"></div>
+          <div class="w-2 bg-cyan-300 rounded-t eq-bar"></div>
+        </div>
+        <div class="space-y-1 text-slate-500">
+          <div class="flex">
+            <span class="text-green-500 mr-2">➜</span>
+            <span>~ initializing audio context...</span>
+          </div>
+          <div class="flex">
+            <span class="text-green-500 mr-2">➜</span>
+            <span>~ loading track id: <span class="text-secondary">x892_lofi</span></span>
+          </div>
+          <div class="flex text-slate-400">
+            <span class="mr-2 opacity-0">➜</span>
+            <span>&gt; fetching metadata... [OK]</span>
+          </div>
+          <div class="flex text-slate-400">
+            <span class="mr-2 opacity-0">➜</span>
+            <span>&gt; buffering 24%...</span>
+          </div>
+          <div class="flex text-slate-400">
+            <span class="mr-2 opacity-0">➜</span>
+            <span>&gt; buffering 89%...</span>
+          </div>
+          <div class="flex text-slate-400">
+            <span class="mr-2 opacity-0">➜</span>
+            <span>&gt; buffering 100%... [DONE]</span>
+          </div>
+          <div class="flex mt-2">
+            <span class="text-green-500 mr-2">➜</span>
+            <span class="animate-pulse">_</span>
+          </div>
+        </div>
+        <div class="mt-6 border border-slate-700 bg-slate-800/30 rounded p-3">
+          <div class="text-[10px] text-slate-400 uppercase mb-2 border-b border-slate-700 pb-1">Stream Stats</div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <div class="text-slate-500">Bitrate:</div>
+            <div class="text-primary text-right">320 kbps</div>
+            <div class="text-slate-500">Format:</div>
+            <div class="text-secondary text-right">FLAC / Lossless</div>
+            <div class="text-slate-500">Sample:</div>
+            <div class="text-slate-300 text-right">44.1 kHz</div>
+            <div class="text-slate-500">Latency:</div>
+            <div class="text-green-500 text-right">24ms</div>
+          </div>
+        </div>
+      </div>
+      <div class="p-2 border-t border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-[#0f1520]">
+        <div class="flex items-center text-xs">
+          <span class="text-primary mr-2">❯</span>
+          <input
+            class="bg-transparent border-none outline-none text-slate-600 dark:text-slate-300 w-full placeholder-slate-600 dark:placeholder-slate-600 focus:ring-0 p-0 h-6"
+            placeholder="enter command..." type="text" />
+        </div>
+      </div>
+    </aside>
+  </div>
+  <footer class="h-6 bg-primary text-white flex items-center justify-between px-3 text-[10px] select-none z-20">
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center bg-black/20 px-2 h-full">
+        <span class="material-icons-round text-xs mr-1">code_off</span>
+        <span>NORMAL</span>
+      </div>
+      <div class="flex items-center">
+        <span class="material-icons-round text-xs mr-1">branch</span>
+        <span>master*</span>
+      </div>
+      <div class="hidden md:flex items-center">
+        <span class="material-icons-round text-xs mr-1">sync</span>
+        <span>0↑ 1↓</span>
+      </div>
+    </div>
+    <div class="flex items-center space-x-4">
+      <div class="flex items-center">
+        <span>Ln 14, Col 32</span>
+      </div>
+      <div class="flex items-center">
+        <span>UTF-8</span>
+      </div>
+      <div class="flex items-center">
+        <span class="material-icons-round text-xs mr-1">notifications</span>
+        <span>Prettier</span>
+      </div>
+    </div>
+  </footer>
+  <div class="fixed bottom-10 right-8 z-40 md:hidden">
+    <button
+      class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center shadow-lg shadow-magenta-500/50 text-white">
+      <span class="material-icons-round">queue_music</span>
+    </button>
+  </div>
+  <script>
+    // Simple toggle for dark mode demonstration
+    // In a real app, this would be hooked up to system preference or user setting
+    if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.add('dark') // Default to dark for this aesthetic
+    }
+  </script>
+
+</body>
+
+</html>

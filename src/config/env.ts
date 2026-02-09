@@ -54,7 +54,9 @@ const envSchema = z.object({
   // --- Image Hosting (ImageKit) ---
   IMAGE_KIT_PUBLIC_KEY: z.string().min(1, 'ImageKit public key is required'),
   IMAGE_KIT_PRIVATE_KEY: z.string().min(1, 'ImageKit private key is required'),
-  IMAGE_KIT_URLENDOINT: z.string().url('ImageKit endpoint must be a valid URL'),
+  IMAGE_KIT_URL_ENDPOINT: z
+    .string()
+    .url('ImageKit endpoint must be a valid URL'),
 
   // --- Social Login ---
   GOOGLE_CLIENT_ID: z.string().min(1, 'Google Client ID is required'),

@@ -4,7 +4,7 @@ import ImageKit from 'imagekit';
 const imagekit = new ImageKit({
   publicKey: ENV_CONFIG.IMAGE_KIT_PUBLIC_KEY,
   privateKey: ENV_CONFIG.IMAGE_KIT_PRIVATE_KEY,
-  urlEndpoint: ENV_CONFIG.IMAGE_KIT_URLENDOINT,
+  urlEndpoint: ENV_CONFIG.IMAGE_KIT_URL_ENDPOINT,
 });
 
 import { ReadStream } from 'fs';
