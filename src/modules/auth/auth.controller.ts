@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { AuthService } from './auth.service';
 import { COOKIE_NAME } from '@/constants';
 import {
+  GoogleLoginInput,
   LoginInput,
   RegisterInput,
   VerifyEmailInput,
@@ -35,7 +36,10 @@ export const authController = (fastify: FastifyInstance) => {
       }>,
       reply: FastifyReply
     ) => {
-      const result = await service.login(req.server, req.body!);
+      const userAgent = req.headers['user-agent'];
+      const ip = req.ip;
+
+      const result = await service.login(req.server, req.body!, userAgent, ip);
 
       const maxAge = ms(ENV_CONFIG.REFRESH_TOKEN_LIFE);
 
@@ -53,6 +57,36 @@ export const authController = (fastify: FastifyInstance) => {
       return sendResponseSuccess(200, reply, 'Login success', response);
     },
 
+    googleLoginHandler: async (
+      req: FastifyRequest<{
+        Body?: GoogleLoginInput;
+      }>,
+      reply: FastifyReply
+    ) => {
+      const userAgent = req.headers['user-agent'];
+      const ip = req.ip;
+
+      const result = await service.googleLogin(
+        req.server,
+        req.body!.idToken,
+        userAgent,
+        ip
+      );
+
+      const maxAge = ms(ENV_CONFIG.REFRESH_TOKEN_LIFE);
+
+      reply.setCookie(COOKIE_NAME, result.refreshToken, {
+        path: '/',
+        httpOnly: true,
+        sameSite: ENV_CONFIG.IS_PRODUCTION ? 'none' : 'lax',
+        secure: ENV_CONFIG.IS_PRODUCTION,
+        maxAge: maxAge / 1000,
+      });
+
+      const { refreshToken, ...response } = result;
+      return sendResponseSuccess(200, reply, 'Google login success', response);
+    },
+
     logOutHandler: async (req: FastifyRequest, reply: FastifyReply) => {
       const result = await service.logout(req.cookies[COOKIE_NAME] as string);
       reply.clearCookie(COOKIE_NAME, { path: '/' });
@@ -60,9 +94,14 @@ export const authController = (fastify: FastifyInstance) => {
     },
 
     refreshTokenHandler: async (req: FastifyRequest, reply: FastifyReply) => {
+      const userAgent = req.headers['user-agent'];
+      const ip = req.ip;
+
       const result = await service.refresh(
         req.server,
-        req.cookies[COOKIE_NAME] as string
+        req.cookies[COOKIE_NAME] as string,
+        userAgent,
+        ip
       );
 
       const maxAge = ms(ENV_CONFIG.REFRESH_TOKEN_LIFE);

@@ -1,5 +1,5 @@
 import { Database } from '@/plugins/database';
-import { RegisterInput, Users } from './auth.validation';
+import { GoogleLoginInput, RegisterInput, Users } from './auth.validation';
 import { profiles, refreshTokens, users } from '@/db/schema';
 import { createId } from '@paralleldrive/cuid2';
 import { hashPassword } from '@/utils/jwt';
@@ -30,7 +30,13 @@ export class AuthRepository {
     });
   }
 
-  async createRefreshToken(userId: string) {
+  async findUserByGoogleId(googleId: string) {
+    return this.db.query.users.findFirst({
+      where: eq(users.googleId, googleId),
+    });
+  }
+
+  async createRefreshToken(userId: string, userAgent?: string, ip?: string) {
     const expiresAt = new Date(Date.now() + ms(ENV_CONFIG.REFRESH_TOKEN_LIFE));
     const refreshToken = createId();
 
@@ -39,12 +45,16 @@ export class AuthRepository {
       token: refreshToken,
       userId: userId,
       expiresAt: expiresAt,
+      userAgent,
+      ip,
     });
 
     return refreshToken;
   }
 
-  async createUser(data: RegisterInput) {
+  async createUser(
+    data: RegisterInput & { googleId?: string; emailVerified?: boolean }
+  ) {
     const { email, password, name, avatarUrl } = data;
 
     const hashedPassword = await hashPassword(password);
@@ -64,9 +74,10 @@ export class AuthRepository {
           name,
           password: hashedPassword,
           avatarUrl,
-          emailVerified: false,
+          emailVerified: data.emailVerified || false,
           verificationToken: createId(),
           verificationTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
+          googleId: data.googleId,
         })
         .returning();
 
