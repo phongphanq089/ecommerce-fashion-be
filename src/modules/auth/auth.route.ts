@@ -33,7 +33,8 @@ export const authRoutes = (fastify: FastifyInstance) => {
           email: { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 8 },
           name: { type: 'string' },
-          avatarUrl: { type: 'string', nullable: true },
+          phone: { type: 'string', nullable: true },
+          address: { type: 'string', nullable: true },
           urlRedirect: { type: 'string', format: 'url', nullable: true },
         },
       },
@@ -61,6 +62,7 @@ export const authRoutes = (fastify: FastifyInstance) => {
         properties: {
           email: { type: 'string', format: 'email' },
           password: { type: 'string' },
+          isMobile: { type: 'boolean', nullable: true },
         },
       },
     },
@@ -236,6 +238,7 @@ export const authRoutes = (fastify: FastifyInstance) => {
         properties: {
           idToken: { type: 'string' },
           urlRedirect: { type: 'string', format: 'url', nullable: true },
+          isMobile: { type: 'boolean', nullable: true },
         },
       },
     },

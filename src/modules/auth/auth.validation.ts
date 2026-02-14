@@ -6,20 +6,26 @@ export const registerSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
   name: z.string().min(3),
-  avatarUrl: z.string().optional(),
-  urlRedirect: z.string().url().optional(),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  urlRedirect: z.url().optional(),
 });
 
 export const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(6),
+  isMobile: z.boolean().optional(),
 });
 
 export const getMeSchema = createSelectSchema(users);
 
-export const logoutSchema = z.object({});
+export const logoutSchema = z.object({
+  refreshToken: z.string().optional(),
+});
 
-export const refreshTokenSchema = z.object({});
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().optional(),
+});
 
 export const forgotPasswordSchema = z.object({
   email: z.email({ message: 'Please enter valid email address' }),
@@ -45,6 +51,7 @@ export const resendVerifyEmailSchema = z.object({
 export const googleLoginSchema = z.object({
   idToken: z.string().min(1, 'Google ID Token is required'),
   urlRedirect: z.string().url().optional(),
+  isMobile: z.boolean().optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;

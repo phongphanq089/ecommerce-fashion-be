@@ -124,6 +124,8 @@ export class AuthService {
       name: string;
       picture: string;
       aud: string;
+      phone?: string;
+      address?: string;
     };
 
     if (googleUser.aud !== ENV_CONFIG.GOOGLE_CLIENT_ID) {
@@ -145,7 +147,8 @@ export class AuthService {
           email: googleUser.email,
           name: googleUser.name,
           password: randomPassword,
-          avatarUrl: googleUser.picture,
+          phone: googleUser?.phone || '',
+          address: googleUser?.address || '',
           googleId: googleUser.sub,
           emailVerified: true, // Google emails are verified
         })) as any; // Cast because transaction result might be array

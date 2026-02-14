@@ -51,10 +51,13 @@ export const authController = (fastify: FastifyInstance) => {
         maxAge: maxAge / 1000,
       });
 
-      // Remove refreshToken from body response
-      const { refreshToken, ...response } = result;
+      // Remove refreshToken from body response if not mobile
+      if (!req.body?.isMobile) {
+        const { refreshToken, ...response } = result;
+        return sendResponseSuccess(200, reply, 'Login success', response);
+      }
 
-      return sendResponseSuccess(200, reply, 'Login success', response);
+      return sendResponseSuccess(200, reply, 'Login success', result);
     },
 
     googleLoginHandler: async (
@@ -83,23 +86,56 @@ export const authController = (fastify: FastifyInstance) => {
         maxAge: maxAge / 1000,
       });
 
-      const { refreshToken, ...response } = result;
-      return sendResponseSuccess(200, reply, 'Google login success', response);
+      if (!req.body?.isMobile) {
+        const { refreshToken, ...response } = result;
+        return sendResponseSuccess(
+          200,
+          reply,
+          'Google login success',
+          response
+        );
+      }
+
+      return sendResponseSuccess(200, reply, 'Google login success', result);
     },
 
-    logOutHandler: async (req: FastifyRequest, reply: FastifyReply) => {
-      const result = await service.logout(req.cookies[COOKIE_NAME] as string);
+    logOutHandler: async (
+      req: FastifyRequest<{
+        Body?: { refreshToken?: string };
+      }>,
+      reply: FastifyReply
+    ) => {
+      const refreshToken =
+        req.body?.refreshToken || (req.cookies[COOKIE_NAME] as string);
+
+      if (!refreshToken) {
+        throw new BadRequestError('Missing refresh token');
+      }
+
+      const result = await service.logout(refreshToken);
       reply.clearCookie(COOKIE_NAME, { path: '/' });
       return sendResponseSuccess(200, reply, 'Logout success', result);
     },
 
-    refreshTokenHandler: async (req: FastifyRequest, reply: FastifyReply) => {
+    refreshTokenHandler: async (
+      req: FastifyRequest<{
+        Body?: { refreshToken?: string };
+      }>,
+      reply: FastifyReply
+    ) => {
       const userAgent = req.headers['user-agent'];
       const ip = req.ip;
 
+      const refreshToken =
+        req.body?.refreshToken || (req.cookies[COOKIE_NAME] as string);
+
+      if (!refreshToken) {
+        throw new BadRequestError('Missing refresh token');
+      }
+
       const result = await service.refresh(
         req.server,
-        req.cookies[COOKIE_NAME] as string,
+        refreshToken,
         userAgent,
         ip
       );
