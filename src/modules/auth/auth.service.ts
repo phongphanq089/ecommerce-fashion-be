@@ -70,13 +70,11 @@ export class AuthService {
     );
 
     if (!isValid) {
-      throw new UnauthorizedError(
-        'Invalid email or password (Password not match)'
-      );
+      throw new NotFoundError('Invalid email or password (Password not match)');
     }
 
     if (!findUserByEmail.emailVerified) {
-      throw new UnauthorizedError('Email not verified');
+      throw new NotFoundError('Email not verified');
     }
 
     const accessToken = server.jwt.sign({
@@ -115,7 +113,7 @@ export class AuthService {
     );
 
     if (!googleResponse.ok) {
-      throw new UnauthorizedError('Invalid Google Token');
+      throw new NotFoundError('Invalid Google Token');
     }
 
     const googleUser = (await googleResponse.json()) as {
@@ -129,7 +127,7 @@ export class AuthService {
     };
 
     if (googleUser.aud !== ENV_CONFIG.GOOGLE_CLIENT_ID) {
-      throw new UnauthorizedError('Token is not for this application');
+      throw new NotFoundError('Token is not for this application');
     }
 
     // 2. Find user by Google ID or Email
