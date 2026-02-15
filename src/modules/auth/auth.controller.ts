@@ -71,7 +71,7 @@ export const authController = (fastify: FastifyInstance) => {
 
       const result = await service.googleLogin(
         req.server,
-        req.body!.idToken,
+        req.body!.code,
         userAgent,
         ip
       );

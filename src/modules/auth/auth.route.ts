@@ -231,12 +231,12 @@ export const authRoutes = (fastify: FastifyInstance) => {
     swaggerSchema: {
       tags: [AUTH_TAG],
       summary: 'Google Login',
-      description: 'Login with Google ID Token',
+      description: 'Login with Google Authorization Code',
       body: {
         type: 'object',
-        required: ['idToken'],
+        required: ['code'],
         properties: {
-          idToken: { type: 'string' },
+          code: { type: 'string' },
           urlRedirect: { type: 'string', format: 'url', nullable: true },
           isMobile: { type: 'boolean', nullable: true },
         },

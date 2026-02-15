@@ -49,7 +49,7 @@ export const resendVerifyEmailSchema = z.object({
 });
 
 export const googleLoginSchema = z.object({
-  idToken: z.string().min(1, 'Google ID Token is required'),
+  code: z.string().min(1, 'Google Code is required'),
   urlRedirect: z.string().url().optional(),
   isMobile: z.boolean().optional(),
 });
