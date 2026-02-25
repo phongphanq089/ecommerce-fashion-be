@@ -18,7 +18,8 @@
     "db:reset": "npx drizzle-kit push --force",
     "db:pull": "npx drizzle-kit introspect",
     "type-check": "tsc --noEmit",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "email_template_preview": "email dev --dir ./src/templates/emails"
   },
   "_moduleAliases": {
     "@": "dist"
@@ -66,6 +67,7 @@
     "zod-validation-error": "^4.0.2"
   },
   "devDependencies": {
+    "@react-email/preview-server": "^5.2.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/ms": "^2.1.0",
     "@types/mustache": "^4.2.6",

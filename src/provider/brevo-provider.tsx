@@ -9,8 +9,8 @@ import Mustache from 'mustache';
 import juice from 'juice';
 import { render } from '@react-email/render';
 import { ENV_CONFIG } from '@/config/env';
-import { WelcomeEmail } from '@/templates/emails/WelcomeEmail';
-import { ResetPasswordEmail } from '@/templates/emails/ResetPasswordEmail';
+import WelcomeEmail from '@/templates/emails/WelcomeEmail';
+import ResetPasswordEmail from '@/templates/emails/ResetPasswordEmail';
 
 let apiInstance = new TransactionalEmailsApi();
 

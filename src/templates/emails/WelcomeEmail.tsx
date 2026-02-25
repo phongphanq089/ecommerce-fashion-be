@@ -20,13 +20,13 @@ interface WelcomeEmailProps {
   year?: string;
 }
 
-export const WelcomeEmail = ({
+export default function WelcomeEmail({
   name,
   verificationUrl,
   logoUrl = 'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
   companyName = 'APK APP',
   year = new Date().getFullYear().toString(),
-}: WelcomeEmailProps) => {
+}: WelcomeEmailProps) {
   return (
     <Html>
       <Head>
@@ -185,4 +185,4 @@ export const WelcomeEmail = ({
       </Tailwind>
     </Html>
   );
-};
+}
