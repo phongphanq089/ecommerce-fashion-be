@@ -27,6 +27,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "typeRoots": ["types", "./node_modules/@types"],
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
     }
