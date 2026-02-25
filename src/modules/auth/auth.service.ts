@@ -34,19 +34,18 @@ export class AuthService {
 
     const redirectUrl = data.urlRedirect || ENV_CONFIG.URL_REDIRECT_FE;
 
-    await BrevoProvider.sendMail(
+    await BrevoProvider.sendReactMail(
       user?.email as string,
       'WELCOME TO ECOMMERCE FASHION',
+      'WelcomeEmail',
       {
         name: user?.email as string,
-        companyName: 'APK APP',
-        companyDomain: 'phongphan.com',
         verificationUrl: `${redirectUrl}/verify-email?email=${user?.email}&token=${user?.verificationToken}`,
         logoUrl:
           'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
+        companyName: 'APK APP',
         year: `${new Date().getFullYear()}`,
-      },
-      'src/templates/template-mail.html'
+      }
     );
 
     return user;
@@ -289,19 +288,18 @@ export class AuthService {
 
     const redirectUrl = urlRedirect || ENV_CONFIG.URL_REDIRECT_FE;
 
-    await BrevoProvider.sendMail(
+    await BrevoProvider.sendReactMail(
       user.email,
       'RESEND VERIFICATION EMAIL',
+      'WelcomeEmail',
       {
         name: user.email,
-        companyName: 'APK_SHOP',
-        companyDomain: 'phongphan.com',
         verificationUrl: `${redirectUrl}/verify-email?email=${user.email}&token=${user.verificationToken}`,
         logoUrl:
           'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
+        companyName: 'APK APP',
         year: `${new Date().getFullYear()}`,
-      },
-      'src/templates/template-mail.html'
+      }
     );
 
     return { message: 'Verification email sent successfully' };
@@ -322,20 +320,16 @@ export class AuthService {
 
     const redirectUrl = urlRedirect || ENV_CONFIG.URL_REDIRECT_FE;
 
-    await BrevoProvider.sendMail(
+    await BrevoProvider.sendReactMail(
       user.email,
       'FORGOT PASSWORD',
+      'ResetPasswordEmail',
       {
         name: user.email,
-        companyName: 'APK_SHOP',
-        companyDomain: 'phongphan.com',
-        // Update URL to use resetToken
         resetPasswordUrl: `${redirectUrl}/reset-password?email=${user.email}&token=${resetToken}`,
-        logoUrl:
-          'https://ik.imagekit.io/htnacim0q/media-ak-shop/setting/logo-app.png',
+        companyName: 'APK APP',
         year: `${new Date().getFullYear()}`,
-      },
-      'src/templates/reset-password.html'
+      }
     );
 
     return { message: 'Reset password email sent successfully' };
