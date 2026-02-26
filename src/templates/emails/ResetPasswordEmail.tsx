@@ -18,12 +18,12 @@ interface ResetPasswordEmailProps {
   year?: string;
 }
 
-export const ResetPasswordEmail = ({
+export default function ResetPasswordEmail({
   name,
   resetPasswordUrl,
   companyName = 'Ecommerce Fashion',
   year = new Date().getFullYear().toString(),
-}: ResetPasswordEmailProps) => {
+}: ResetPasswordEmailProps) {
   return (
     <Html>
       <Head>
@@ -156,4 +156,4 @@ export const ResetPasswordEmail = ({
       </Tailwind>
     </Html>
   );
-};
+}

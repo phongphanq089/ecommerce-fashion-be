@@ -5,7 +5,7 @@ import {
   ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import fastifySwagger from '@fastify/swagger';
-import fastifySwaggerUI from '@fastify/swagger-ui';
+// import fastifySwaggerUI from '@fastify/swagger-ui';
 import registerRoutes from './routes';
 import { ENV_CONFIG } from './config/env';
 import fastifyCors from '@fastify/cors';
@@ -18,6 +18,7 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyCookie from '@fastify/cookie';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
+import fastifyApiReference from '@scalar/fastify-api-reference';
 
 export function buildServer() {
   // Khởi tạo Fastify với ZodTypeProvider
@@ -38,7 +39,29 @@ export function buildServer() {
   }).withTypeProvider<ZodTypeProvider>();
 
   // Security Plugins
-  server.register(fastifyHelmet);
+  server.register(fastifyHelmet, {
+    contentSecurityPolicy: {
+      directives: {
+        ...fastifyHelmet.contentSecurityPolicy.getDefaultDirectives(),
+        'script-src': [
+          "'self'",
+          "'unsafe-inline'",
+          'cdn.jsdelivr.net',
+          '*.scalar.com',
+        ],
+        'style-src': [
+          "'self'",
+          "'unsafe-inline'",
+          'cdn.jsdelivr.net',
+          'fonts.googleapis.com',
+          '*.scalar.com',
+        ],
+        'font-src': ["'self'", 'fonts.gstatic.com'],
+        'img-src': ["'self'", 'data:', 'cdn.jsdelivr.net', '*.scalar.com'],
+        'connect-src': ["'self'", 'cdn.jsdelivr.net', '*.scalar.com'],
+      },
+    },
+  });
   server.register(fastifyRateLimit, {
     max: 100,
     timeWindow: '1 minute',
@@ -117,29 +140,54 @@ export function buildServer() {
     },
   });
 
-  // Đăng ký Swagger UI để hiển thị tài liệu
-  server.register(fastifySwaggerUI, {
-    routePrefix: '/docs',
+  // Diagnostic log for Scalar API Key
+  if (ENV_CONFIG.SCALAR_API_KEY) {
+    server.log.info(
+      `Scalar API Key loaded. Length: ${ENV_CONFIG.SCALAR_API_KEY.length}, Starts with: ${ENV_CONFIG.SCALAR_API_KEY.substring(0, 10)}...`
+    );
+  } else {
+    server.log.warn('Scalar API Key NOT found in configuration.');
+  }
 
-    uiConfig: {
-      docExpansion: 'list',
-      deepLinking: false,
-    },
-    theme: {
-      css: [
-        {
-          filename: 'theme.css',
-          content: '.swagger-ui .topbar { background-color: #129c08ff; }',
-        },
-      ],
-      js: [
-        {
-          filename: 'custom.js',
-          content: 'console.log("Swagger UI loaded!");',
-        },
-      ],
+  // sử dụng_scalar để hiển thị tài liệu , đây là cách mới ui mới đẹp hơn, hiện tại đang dùng
+  server.register(fastifyApiReference, {
+    routePrefix: '/docs',
+    configuration: {
+      spec: {
+        content: () => server.swagger(),
+      },
+      // You can also add more Scalar options here
+      theme: 'Kepler-11e',
+      // url: 'https://registry.scalar.com/phong_phan/apis/ecommerce-app-project-phong-phan/latest?format=json',
+      // agent: ENV_CONFIG.SCALAR_API_KEY
+      //   ? { key: ENV_CONFIG.SCALAR_API_KEY }
+      //   : undefined,
     },
   });
+
+  //  Đăng ký Swagger UI để hiển thị tài liệu , đây là cách cũ ui cũ
+  // server.register(fastifySwaggerUI, {
+  //   routePrefix: '/docs',
+
+  //   uiConfig: {
+  //     docExpansion: 'list',
+  //     deepLinking: false,
+  //   },
+  //   theme: {
+  //     css: [
+  //       {
+  //         filename: 'theme.css',
+  //         content: '.swagger-ui .topbar { background-color: #129c08ff; }',
+  //       },
+  //     ],
+  //     js: [
+  //       {
+  //         filename: 'custom.js',
+  //         content: 'console.log("Swagger UI loaded!");',
+  //       },
+  //     ],
+  //   },
+  // });
 
   //  Đăng ký plugin xử lý lỗi
   // Nó nên được đăng ký trước các route

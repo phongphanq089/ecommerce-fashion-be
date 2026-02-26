@@ -18,7 +18,8 @@
     "db:reset": "npx drizzle-kit push --force",
     "db:pull": "npx drizzle-kit introspect",
     "type-check": "tsc --noEmit",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "email_template_preview": "email dev --dir ./src/templates/emails"
   },
   "_moduleAliases": {
     "@": "dist"
@@ -41,6 +42,7 @@
     "@paralleldrive/cuid2": "^3.0.6",
     "@react-email/components": "^1.0.8",
     "@react-email/render": "^2.0.4",
+    "@scalar/fastify-api-reference": "^1.44.26",
     "@sentry/node": "^10.15.0",
     "bcryptjs": "^3.0.3",
     "cfonts": "^2.4.8",
@@ -66,6 +68,7 @@
     "zod-validation-error": "^4.0.2"
   },
   "devDependencies": {
+    "@react-email/preview-server": "^5.2.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/ms": "^2.1.0",
     "@types/mustache": "^4.2.6",
