@@ -72,6 +72,12 @@ const envSchema = z.object({
     .string()
     .min(1, 'Super admin name is required')
     .optional(),
+
+  // --- Scalar API Key ---
+  SCALAR_API_KEY: z
+    .string()
+    .optional()
+    .transform((val) => val?.trim()),
 });
 
 // Parse and Validate
