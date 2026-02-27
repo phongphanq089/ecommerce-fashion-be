@@ -43,6 +43,7 @@ export const productController = (fastify: FastifyInstance) => {
       }>,
       reply: FastifyReply
     ) => {
+      console.log('req.query', req.query);
       if (!req.query?.page || !req.query?.limit) {
         return sendResponseSuccess(
           200,

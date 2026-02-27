@@ -29,6 +29,7 @@ export const createProductSchema = createInsertSchema(products).extend({
     .min(3, { message: 'Slug must be at least 3 characters long' }),
   categoryId: z.string('Invalid category ID'),
   mediaIds: z.array(z.string()).optional(),
+  collectionIds: z.array(z.string().cuid('Invalid collection ID')).optional(),
   variants: z
     .array(productVariantSchema)
     .min(1, 'At least one variant is required'),
@@ -43,6 +44,7 @@ export const updateProductSchema = z.object({
   slug: z.string().min(3, 'Slug must be at least 3 characters long').optional(),
   categoryId: z.uuid('Invalid category ID').optional(),
   mediaIds: z.array(z.uuid()).optional(),
+  collectionIds: z.array(z.cuid('Invalid collection ID')).optional(),
   variants: z.array(productVariantSchema).optional(),
 });
 
