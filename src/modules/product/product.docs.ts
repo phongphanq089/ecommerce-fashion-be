@@ -64,6 +64,10 @@ export const PRODUCT_DOCUMENTATION = {
           type: 'array',
           items: { type: 'string', format: 'cuid' },
         },
+        collectionIds: {
+          type: 'array',
+          items: { type: 'string', format: 'cuid' },
+        },
         variants: {
           type: 'array',
           items: {

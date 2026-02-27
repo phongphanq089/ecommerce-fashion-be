@@ -251,6 +251,53 @@ export const attributeValuesToVariants = pgTable(
   ]
 );
 
+// 1. Bảng Bộ sưu tập
+export const collections = pgTable('collection', {
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
+  name: text('name').notNull(),
+  slug: text('slug').unique().notNull(),
+  description: text('description'),
+  imageUrl: text('image_url'), // Ảnh banner cho bộ sưu tập
+  isActive: boolean('is_active').default(true),
+  ...timestamps,
+});
+
+// 2. Bảng trung gian (Junction Table)
+export const productsToCollections = pgTable(
+  'product_to_collection',
+  {
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    collectionId: text('collection_id')
+      .notNull()
+      .references(() => collections.id, { onDelete: 'cascade' }),
+    displayOrder: integer('display_order').default(0), // Để sắp xếp sản phẩm trong collection
+  },
+  (table) => [primaryKey({ columns: [table.productId, table.collectionId] })]
+);
+
+// 3. Khai báo Quan hệ (Relations)
+export const collectionsRelations = relations(collections, ({ many }) => ({
+  products: many(productsToCollections),
+}));
+
+export const productsToCollectionsRelations = relations(
+  productsToCollections,
+  ({ one }) => ({
+    product: one(products, {
+      fields: [productsToCollections.productId],
+      references: [products.id],
+    }),
+    collection: one(collections, {
+      fields: [productsToCollections.collectionId],
+      references: [collections.id],
+    }),
+  })
+);
+
 export const carts = pgTable('cart', {
   id: text('id')
     .$defaultFn(() => cuid())
@@ -382,6 +429,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   }),
   images: many(productImages),
   variants: many(productVariants),
+  collections: many(productsToCollections),
 }));
 
 export const productVariantsRelations = relations(
