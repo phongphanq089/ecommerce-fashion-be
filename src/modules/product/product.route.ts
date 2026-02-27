@@ -1,5 +1,7 @@
 import { routeWithZod } from '@/utils/routeWithZod';
 import { FastifyInstance } from 'fastify';
+import { authenticate } from '@/middleware/auth.middleware';
+import { ROLE_NAME } from '@/constants';
 import {
   CATEGORY_TAG,
   PRODUCT_TAG,
@@ -33,6 +35,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.CREATE_PRODUCT,
       tags: [PRODUCT_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: createProductSchema,
     handler: controller.createProductHandler,
   });
@@ -71,6 +75,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.UPDATE_PRODUCT,
       tags: [PRODUCT_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.updateProductHandler,
   });
 
@@ -83,6 +89,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.DELETE_PRODUCT,
       tags: [PRODUCT_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.deleteProductHandler,
   });
 
@@ -97,6 +105,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
         PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.DELETE_MANY_PRODUCTS,
       tags: [PRODUCT_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: deleteManyProductsSchema,
     handler: controller.deleteManyProductsHandler,
   });
@@ -112,6 +122,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: CATEGORY_DOCUMENTATION.CATEGORY_DESCRIPTIONS.CREATE_CATEGORY,
       tags: [CATEGORY_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: createCategorySchema,
     handler: controller.createCategoryHandler,
   });
@@ -152,6 +164,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: CATEGORY_DOCUMENTATION.CATEGORY_DESCRIPTIONS.UPDATE_CATEGORY,
       tags: [CATEGORY_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.updateCategoryHandler,
   });
 
@@ -164,6 +178,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: CATEGORY_DOCUMENTATION.CATEGORY_DESCRIPTIONS.DELETE_CATEGORY,
       tags: [CATEGORY_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.deleteCategoryHandler,
   });
 
@@ -179,6 +195,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
         CATEGORY_DOCUMENTATION.CATEGORY_DESCRIPTIONS.DELETE_MANY_CATEGORIES,
       tags: [CATEGORY_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: deleteManyCategoriesSchema,
     handler: controller.deleteManyCategoriesHandler,
   });
@@ -195,6 +213,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
         ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_DESCRIPTIONS.CREATE_ATTRIBUTE,
       tags: [ATTRIBUTE_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: createAttributeSchema,
     handler: controller.createAttributeHandler,
   });
@@ -236,6 +256,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
         ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_DESCRIPTIONS.UPDATE_ATTRIBUTE,
       tags: [ATTRIBUTE_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.updateAttributeHandler,
   });
 
@@ -249,6 +271,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
         ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_DESCRIPTIONS.DELETE_ATTRIBUTE,
       tags: [ATTRIBUTE_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.deleteAttributeHandler,
   });
 
@@ -265,6 +289,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
         ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_DESCRIPTIONS.DELETE_MANY_ATTRIBUTES,
       tags: [ATTRIBUTE_TAG],
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: deleteManyAttributesSchema,
     handler: controller.deleteManyAttributesHandler,
   });

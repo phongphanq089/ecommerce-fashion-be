@@ -1,5 +1,7 @@
 import { fileUploadMiddleware } from '@/middleware/fileUpload.middleware';
 import { FastifyInstance } from 'fastify';
+import { authenticate } from '@/middleware/auth.middleware';
+import { ROLE_NAME } from '@/constants';
 import { mediaController } from './media.controller';
 import {
   MEDIA_FILE_DOCUMENTATION,
@@ -36,7 +38,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       consumes: ['multipart/form-data'],
       ...MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.UPLOAD_FILE_SINGLE,
     },
-    preHandler: [fileUploadMiddleware.single],
+    preHandler: [authenticate, fileUploadMiddleware.single],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.createMediaSingle,
   });
 
@@ -52,7 +55,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       consumes: ['multipart/form-data'],
       ...MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.UPLOAD_FILE_MULTIPLE,
     },
-    preHandler: [fileUploadMiddleware.multiple],
+    preHandler: [authenticate, fileUploadMiddleware.multiple],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.createMediaMultiple,
   });
   routeWithZod(fastify, {
@@ -77,7 +81,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       description: MEDIA_FILE_DOCUMENTATION.MEDIA_DESCRIPTIONS.DELETE_SINGLE,
       body: MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.DELETE_SINGLE,
     },
-    preHandler: [zodValidate(deleteMediaSingleSchema)],
+    preHandler: [authenticate, zodValidate(deleteMediaSingleSchema)],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.deleteMediaSingle,
   });
   routeWithZod(fastify, {
@@ -90,7 +95,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       description: MEDIA_FILE_DOCUMENTATION.MEDIA_DESCRIPTIONS.DELETE_MULTIPLE,
       body: MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.DELETE_MULTIPLE,
     },
-    preHandler: [zodValidate(deleteMediaMultipleSchema)],
+    preHandler: [authenticate, zodValidate(deleteMediaMultipleSchema)],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.deleteMediaMultiple,
   });
 
@@ -108,6 +114,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       description: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_DESCRIPTIONS.CREATE,
       body: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_REQUEST_BODIES.CREATE,
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: mediaFolderCreateSchema,
     handler: controller.createFolderHandler,
   });
@@ -135,6 +143,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       description: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_DESCRIPTIONS.UPDATE,
       body: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_REQUEST_BODIES.UPDATE,
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: mediaFolderUpdateSchema,
     handler: controller.updateFolderHandler,
   });
@@ -149,6 +159,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       description: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_DESCRIPTIONS.DELETE,
       params: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_REQUEST_BODIES.DELETE,
     },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     paramsSchema: z.object({
       id: z.uuid(),
     }),
