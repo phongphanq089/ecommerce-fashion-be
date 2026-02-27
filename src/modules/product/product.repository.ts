@@ -16,6 +16,7 @@ import {
   productImages,
   products,
   productVariants,
+  productsToCollections,
 } from '@/db/schema';
 import { ilike, and, gte, lte, desc, asc, exists } from 'drizzle-orm';
 
@@ -54,7 +55,15 @@ export class ProductRepository {
   }
 
   async createProduct(data: CreateProductInput) {
-    const { name, description, slug, categoryId, variants, mediaIds } = data;
+    const {
+      name,
+      description,
+      slug,
+      categoryId,
+      variants,
+      mediaIds,
+      collectionIds,
+    } = data;
 
     return await this.db.transaction(async (tx) => {
       // 1. Create Product
@@ -81,6 +90,19 @@ export class ProductRepository {
             displayOrder: index,
           }))
         );
+      }
+
+      // 2.5 Associate with Collections
+      if (collectionIds && collectionIds.length > 0) {
+        await tx
+          .insert(productsToCollections)
+          .values(
+            collectionIds.map((collectionId) => ({
+              productId: newProduct.id,
+              collectionId,
+            }))
+          )
+          .onConflictDoNothing();
       }
 
       // 3. Create Variants & Attributes
@@ -228,6 +250,11 @@ export class ProductRepository {
           },
         },
         category: true,
+        collections: {
+          with: {
+            collection: true,
+          },
+        },
         variants: {
           with: {
             attributes: {
@@ -262,6 +289,11 @@ export class ProductRepository {
           orderBy: (images, { asc }) => [asc(images.displayOrder)],
         },
         category: true,
+        collections: {
+          with: {
+            collection: true,
+          },
+        },
         variants: {
           with: {
             attributes: {
