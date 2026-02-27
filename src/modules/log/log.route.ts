@@ -5,15 +5,24 @@ import { LOGS_DESCRIPTIONS, LOGS_SUMMARIES, LOGS_TAG } from './logs.docs';
 import { createReadStream } from 'fs';
 import readline from 'readline';
 import { sendResponseError, sendResponseSuccess } from '@/utils/sendResponse';
+import { routeWithZod } from '@/utils/routeWithZod';
+import { authenticate } from '@/middleware/auth.middleware';
+import { ROLE_NAME } from '@/constants';
 
 export default async function logRoute(fastify: FastifyInstance) {
   const logDir = path.resolve('logs');
+
   // ===== API GET FILES ==== ///
-  (((fastify.get('/files', {
-    schema: {
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/files',
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    swaggerSchema: {
       summary: LOGS_SUMMARIES.GET_FILES,
       description: LOGS_DESCRIPTIONS.GET_FILES,
       tags: [LOGS_TAG],
+      security: [{ bearerAuth: [] }],
     },
     handler: async (_, reply) => {
       const files = await fs.readdir(logDir);
@@ -21,21 +30,24 @@ export default async function logRoute(fastify: FastifyInstance) {
 
       return sendResponseSuccess(200, reply, 'Get Logfile ', logFiles);
     },
-  }),
-  fastify.get('/view/:filename', {
-    schema: {
+  });
+
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/view/:filename',
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    swaggerSchema: {
       summary: LOGS_SUMMARIES.VIEW_FILE,
       description: LOGS_DESCRIPTIONS.VIEW_FILE,
       tags: [LOGS_TAG],
+      security: [{ bearerAuth: [] }],
     },
     handler: async (req, reply) => {
-      // Bên trong handler của bạn
       const { filename } = req.params as { filename: string };
 
-      // B1: Chuẩn hóa đường dẫn
       const intendedPath = path.normalize(path.join(logDir, filename));
 
-      // B2: Kiểm tra xem đường dẫn đã chuẩn hóa có thực sự nằm trong thư mục log hay không
       if (!intendedPath.startsWith(logDir) || filename.includes('..')) {
         return reply.status(403).send({ error: 'Forbidden: Access denied' });
       }
@@ -46,7 +58,7 @@ export default async function logRoute(fastify: FastifyInstance) {
 
         const lines = raw
           .split('\n')
-          .filter(Boolean) // bỏ dòng trống
+          .filter(Boolean)
           .map((line) => {
             try {
               return JSON.parse(line);
@@ -70,21 +82,24 @@ export default async function logRoute(fastify: FastifyInstance) {
         );
       }
     },
-  })),
-  fastify.get('/search/:filename', {
-    schema: {
+  });
+
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/search/:filename',
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    swaggerSchema: {
       summary: LOGS_SUMMARIES.SEARCH_FILE,
       description: LOGS_DESCRIPTIONS.SEARCH_FILE,
       tags: [LOGS_TAG],
+      security: [{ bearerAuth: [] }],
     },
     handler: async (req, reply) => {
-      // Bên trong handler của bạn
       const { filename } = req.params as { filename: string };
 
-      // B1: Chuẩn hóa đường dẫn
       const intendedPath = path.normalize(path.join(logDir, filename));
 
-      // B2: Kiểm tra xem đường dẫn đã chuẩn hóa có thực sự nằm trong thư mục log hay không
       if (!intendedPath.startsWith(logDir) || filename.includes('..')) {
         return reply.status(403).send({ error: 'Forbidden: Access denied' });
       }
@@ -100,7 +115,6 @@ export default async function logRoute(fastify: FastifyInstance) {
         });
 
         const matches = [];
-        // Đọc file theo từng dòng, không load hết vào RAM
         for await (const line of rl) {
           if (line.includes(keyword)) {
             try {
@@ -126,33 +140,39 @@ export default async function logRoute(fastify: FastifyInstance) {
         );
       }
     },
-  })),
-    fastify.delete('/delete/:filename', {
-      schema: {
-        summary: LOGS_SUMMARIES.DELETE_FILE,
-        description: LOGS_DESCRIPTIONS.DELETE_FILE,
-        tags: [LOGS_TAG],
-      },
-      handler: async (req, reply) => {
-        const { filename } = req.params as { filename: string };
+  });
 
-        const filePath = path.join(logDir, filename);
-        try {
-          await fs.unlink(filePath);
+  routeWithZod(fastify, {
+    method: 'delete',
+    url: '/delete/:filename',
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    swaggerSchema: {
+      summary: LOGS_SUMMARIES.DELETE_FILE,
+      description: LOGS_DESCRIPTIONS.DELETE_FILE,
+      tags: [LOGS_TAG],
+      security: [{ bearerAuth: [] }],
+    },
+    handler: async (req, reply) => {
+      const { filename } = req.params as { filename: string };
 
-          return sendResponseSuccess(
-            200,
-            reply,
-            `Log file ${filename} deleted successfully`
-          );
-        } catch (e) {
-          return sendResponseError(
-            404,
-            reply,
-            `Log file ${filePath} not found`,
-            null
-          );
-        }
-      },
-    }));
+      const filePath = path.join(logDir, filename);
+      try {
+        await fs.unlink(filePath);
+
+        return sendResponseSuccess(
+          200,
+          reply,
+          `Log file ${filename} deleted successfully`
+        );
+      } catch (e) {
+        return sendResponseError(
+          404,
+          reply,
+          `Log file ${filePath} not found`,
+          null
+        );
+      }
+    },
+  });
 }
