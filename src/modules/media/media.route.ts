@@ -162,7 +162,7 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     preHandler: [authenticate],
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     paramsSchema: z.object({
-      id: z.uuid(),
+      id: z.string(),
     }),
 
     handler: controller.deleteFolderHandler,
