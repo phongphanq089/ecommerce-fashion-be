@@ -72,7 +72,7 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     handler: controller.getMedia,
   });
   routeWithZod(fastify, {
-    method: 'delete',
+    method: 'post',
     url: '/delete-single',
     disableValidator: true,
     swaggerSchema: {
@@ -86,7 +86,7 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     handler: controller.deleteMediaSingle,
   });
   routeWithZod(fastify, {
-    method: 'delete',
+    method: 'post',
     url: '/delete-multiple',
     disableValidator: true,
     swaggerSchema: {
