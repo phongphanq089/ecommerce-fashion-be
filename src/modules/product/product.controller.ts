@@ -6,9 +6,12 @@ import {
   UpdateProductInput,
   CreateAttributeInput,
   UpdateAttributeInput,
+  CreateBrandInput,
+  UpdateBrandInput,
   DeleteManyProductsInput,
   DeleteManyCategoriesInput,
   DeleteManyAttributesInput,
+  DeleteManyBrandsInput,
 } from './product.validate';
 import { sendResponseSuccess } from '@/utils/sendResponse';
 import { ProductService } from './product.service';
@@ -36,6 +39,7 @@ export const productController = (fastify: FastifyInstance) => {
           limit?: number;
           search?: string;
           categoryId?: string;
+          brandId?: string;
           minPrice?: number;
           maxPrice?: number;
           sort?: 'price_asc' | 'price_desc' | 'newest' | 'oldest';
@@ -60,6 +64,7 @@ export const productController = (fastify: FastifyInstance) => {
         minPrice: req.query.minPrice ? Number(req.query.minPrice) : undefined,
         maxPrice: req.query.maxPrice ? Number(req.query.maxPrice) : undefined,
         sort: req.query.sort,
+        ...(req.query.brandId ? { brandId: req.query.brandId } : {}),
       });
       return sendResponseSuccess(
         200,
@@ -269,6 +274,70 @@ export const productController = (fastify: FastifyInstance) => {
         200,
         reply,
         'Delete many attributes success',
+        null
+      );
+    },
+
+    // ===== BRAND CONTROLLER ===== //
+
+    createBrandHandler: async (
+      req: FastifyRequest<{ Body: CreateBrandInput }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.createBrand(req.body as CreateBrandInput);
+      return sendResponseSuccess(201, reply, 'Create brand success', result);
+    },
+
+    getAllBrandsHandler: async (
+      req: FastifyRequest<{ Querystring?: { page?: number; limit?: number } }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.getAllBrands(
+        Number(req.query?.page) || 1,
+        Number(req.query?.limit) || 100
+      );
+      return sendResponseSuccess(200, reply, 'Get all brands success', result);
+    },
+
+    getBrandByIdHandler: async (
+      req: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.getBrandById(req.params.id);
+      return sendResponseSuccess(200, reply, 'Get brand success', result);
+    },
+
+    updateBrandHandler: async (
+      req: FastifyRequest<{
+        Params: { id: string };
+        Body: UpdateBrandInput;
+      }>,
+      reply: FastifyReply
+    ) => {
+      const result = await service.updateBrand(
+        req.params.id,
+        req.body as UpdateBrandInput
+      );
+      return sendResponseSuccess(200, reply, 'Update brand success', result);
+    },
+
+    deleteBrandHandler: async (
+      req: FastifyRequest<{ Params: { id: string } }>,
+      reply: FastifyReply
+    ) => {
+      await service.deleteBrand(req.params.id);
+      return sendResponseSuccess(200, reply, 'Delete brand success', null);
+    },
+
+    deleteManyBrandsHandler: async (
+      req: FastifyRequest<{ Body: DeleteManyBrandsInput }>,
+      reply: FastifyReply
+    ) => {
+      await service.deleteManyBrands(req.body);
+      return sendResponseSuccess(
+        200,
+        reply,
+        'Delete many brands success',
         null
       );
     },

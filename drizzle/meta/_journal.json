@@ -8,6 +8,13 @@
       "when": 1769753391283,
       "tag": "0000_wandering_makkari",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773039394875,
+      "tag": "0001_spicy_next_avengers",
+      "breakpoints": true
     }
   ]
 }
