@@ -8,9 +8,12 @@ import {
   DeleteManyProductsInput,
   DeleteManyCategoriesInput,
   DeleteManyAttributesInput,
+  CreateBrandInput,
+  UpdateBrandInput,
+  DeleteManyBrandsInput,
 } from './product.validate';
 import { GetProductsFilter, ProductRepository } from './product.repository';
-import { ConflictError } from '@/utils/errors';
+import { ConflictError, NotFoundError } from '@/utils/errors';
 
 export class ProductService {
   private repo: ProductRepository;
@@ -21,12 +24,10 @@ export class ProductService {
   //======= PRODUCT SERVICE =======//
   async createProduct(data: CreateProductInput) {
     const existCategory = await this.repo.findCategoryById(data.categoryId);
-
-    const createProduct = await this.repo.createProduct(data);
     if (!existCategory) {
-      throw new Error('Category not found');
+      throw new NotFoundError('Category not found');
     }
-    return createProduct;
+    return this.repo.createProduct(data);
   }
 
   async getAllProducts(filter: GetProductsFilter) {
@@ -148,5 +149,46 @@ export class ProductService {
 
   async deleteManyAttributes(data: DeleteManyAttributesInput) {
     return this.repo.deleteManyAttributes(data.ids);
+  }
+
+  //======= BRAND SERVICE =======//
+
+  async createBrand(data: CreateBrandInput) {
+    const existSlug = await this.repo.getBrandBySlug(data.slug);
+    if (existSlug) {
+      throw new ConflictError('Brand slug already exists');
+    }
+    return this.repo.createBrand(data);
+  }
+
+  async getAllBrands(page: number = 1, limit: number = 100) {
+    const { brands, total } = await this.repo.getAllBrands(page, limit);
+    return {
+      data: brands,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getBrandById(id: string) {
+    const brand = await this.repo.getBrandById(id);
+    if (!brand) throw new Error('Brand not found');
+    return brand;
+  }
+
+  async updateBrand(id: string, data: UpdateBrandInput) {
+    return this.repo.updateBrand(id, data);
+  }
+
+  async deleteBrand(id: string) {
+    return this.repo.deleteBrand(id);
+  }
+
+  async deleteManyBrands(data: DeleteManyBrandsInput) {
+    return this.repo.deleteManyBrandsSchema(data.ids);
   }
 }

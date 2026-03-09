@@ -47,6 +47,8 @@ export const paymentStatusEnum = pgEnum('payment_status', [
   'REFUNDED',
 ]);
 
+export const productTypeEnum = pgEnum('product_type', ['SINGLE', 'VARIANT']);
+
 // --- HELPER CHO TIMESTAMP (DRY code) --- //
 const timestamps = {
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -157,6 +159,24 @@ export const products = pgTable('product', {
   categoryId: text('category_id')
     .notNull()
     .references(() => categories.id),
+  brandId: text('brand_id')
+    .notNull()
+    .references(() => brands.id),
+  type: productTypeEnum('type').default('SINGLE'),
+  summary: text('summary'),
+  tags: text('tags').array(),
+  thumbnailId: text('thumbnail_id').references(() => media.id),
+  isFeatured: boolean('is_featured').default(false),
+  isRefunded: boolean('is_refunded').default(false),
+  hasWarranty: boolean('has_warranty').default(false),
+  metaTitle: text('meta_title'),
+  metaDescription: text('meta_description'),
+  metaImageId: text('meta_image_id').references(() => media.id),
+  discountType: discountTypeEnum('discount_type').default('FIXED'),
+  discountValue: doublePrecision('discount_value').default(0),
+  discountStartDate: timestamp('discount_start_date'),
+  discountEndDate: timestamp('discount_end_date'),
+  disableShipping: boolean('disable_shipping').default(false),
   ...timestamps,
 });
 
@@ -170,6 +190,8 @@ export const productVariants = pgTable(
     price: doublePrecision('price').notNull(),
     stockQuantity: integer('stock_quantity').default(0),
     productId: text('product_id').notNull(),
+    purchasePrice: doublePrecision('purchase_price').default(0),
+    lowStockQuantity: integer('low_stock_quantity').default(0),
   },
   (table) => [index('product_variant_product_idx').on(table.productId)]
 );
@@ -386,6 +408,17 @@ export const payments = pgTable('payment', {
   ...timestamps,
 });
 
+export const brands = pgTable('brand', {
+  id: text('id')
+    .$defaultFn(() => cuid())
+    .primaryKey(),
+  name: text('name').unique().notNull(),
+  slug: text('slug').unique().notNull(),
+  logoUrl: text('logo_url'),
+  isActive: boolean('is_active').default(true),
+  ...timestamps,
+});
+
 // Relations (phiên bản cũ - dễ dùng nhất)
 export const usersRelations = relations(users, ({ one, many }) => ({
   profile: one(profiles, {
@@ -432,6 +465,24 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   images: many(productImages),
   variants: many(productVariants),
   collections: many(productsToCollections),
+  brand: one(brands, {
+    fields: [products.brandId],
+    references: [brands.id],
+  }),
+  thumbnail: one(media, {
+    fields: [products.thumbnailId],
+    references: [media.id],
+    relationName: 'product_thumbnail',
+  }),
+  metaImage: one(media, {
+    fields: [products.metaImageId],
+    references: [media.id],
+    relationName: 'product_metaImage',
+  }),
+}));
+
+export const brandsRelations = relations(brands, ({ many }) => ({
+  products: many(products),
 }));
 
 export const productVariantsRelations = relations(
@@ -493,6 +544,16 @@ export const mediaRelations = relations(media, ({ one }) => ({
     references: [mediaFolders.id],
   }),
   productImage: one(productImages),
+  thumbnail: one(products, {
+    fields: [media.id],
+    references: [products.thumbnailId],
+    relationName: 'product_thumbnail',
+  }),
+  metaImage: one(products, {
+    fields: [media.id],
+    references: [products.metaImageId],
+    relationName: 'product_metaImage',
+  }),
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
