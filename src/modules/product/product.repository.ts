@@ -6,6 +6,8 @@ import {
   UpdateProductInput,
   CreateAttributeInput,
   UpdateAttributeInput,
+  CreateBrandInput,
+  UpdateBrandInput,
 } from './product.validate';
 import { eq, inArray, count } from 'drizzle-orm';
 import {
@@ -17,6 +19,7 @@ import {
   products,
   productVariants,
   productsToCollections,
+  brands,
 } from '@/db/schema';
 import { ilike, and, gte, lte, desc, asc, exists } from 'drizzle-orm';
 
@@ -28,6 +31,7 @@ export interface GetProductsFilter {
   minPrice?: number | undefined;
   maxPrice?: number | undefined;
   sort?: 'price_asc' | 'price_desc' | 'newest' | 'oldest' | undefined;
+  brandId?: string;
 }
 
 export class ProductRepository {
@@ -63,6 +67,22 @@ export class ProductRepository {
       variants,
       mediaIds,
       collectionIds,
+      type,
+      brandId,
+      summary,
+      tags,
+      thumbnailId,
+      isFeatured,
+      isRefunded,
+      hasWarranty,
+      metaTitle,
+      metaDescription,
+      metaImageId,
+      discountType,
+      discountValue,
+      discountStartDate,
+      discountEndDate,
+      disableShipping,
     } = data;
 
     return await this.db.transaction(async (tx) => {
@@ -74,6 +94,24 @@ export class ProductRepository {
           description,
           slug,
           categoryId,
+          type,
+          brandId,
+          summary,
+          tags,
+          thumbnailId,
+          isFeatured,
+          isRefunded,
+          hasWarranty,
+          metaTitle,
+          metaDescription,
+          metaImageId,
+          discountType,
+          discountValue,
+          discountStartDate: discountStartDate
+            ? new Date(discountStartDate)
+            : null,
+          discountEndDate: discountEndDate ? new Date(discountEndDate) : null,
+          disableShipping,
         })
         .returning();
 
@@ -190,6 +228,7 @@ export class ProductRepository {
       limit,
       search,
       categoryId,
+      brandId,
       minPrice,
       maxPrice,
       sort = 'newest',
@@ -204,6 +243,10 @@ export class ProductRepository {
 
     if (categoryId) {
       whereConditions.push(eq(products.categoryId, categoryId));
+    }
+
+    if (brandId) {
+      whereConditions.push(eq(products.brandId, brandId));
     }
 
     if (minPrice !== undefined || maxPrice !== undefined) {
@@ -285,8 +328,14 @@ export class ProductRepository {
     const product = await this.db.query.products.findFirst({
       where: eq(products.id, id),
       with: {
+        brand: true,
+        thumbnail: true,
+        metaImage: true,
         images: {
           orderBy: (images, { asc }) => [asc(images.displayOrder)],
+          with: {
+            media: true,
+          },
         },
         category: true,
         collections: {
@@ -331,8 +380,28 @@ export class ProductRepository {
 
   async updateProduct(id: string, data: UpdateProductInput) {
     // Simple update for now, complex variant update is for later iteration
-    const { variants, mediaIds, ...rest } = data;
-    await this.db.update(products).set(rest).where(eq(products.id, id));
+    const {
+      variants,
+      mediaIds,
+      collectionIds,
+      discountStartDate,
+      discountEndDate,
+      ...rest
+    } = data;
+
+    const updateData: Record<string, unknown> = { ...rest };
+    if (discountStartDate !== undefined) {
+      updateData.discountStartDate = discountStartDate
+        ? new Date(discountStartDate)
+        : null;
+    }
+
+    if (discountEndDate !== undefined) {
+      updateData.discountEndDate = discountEndDate
+        ? new Date(discountEndDate)
+        : null;
+    }
+    await this.db.update(products).set(updateData).where(eq(products.id, id));
     // Note: variants and media update logic is omitted for brevity/MVP
     // To be "reasonable", we should at least support basic info update.
     return this.getProductById(id);
@@ -441,5 +510,50 @@ export class ProductRepository {
 
   async deleteManyAttributes(ids: string[]) {
     return this.db.delete(attributes).where(inArray(attributes.id, ids));
+  }
+
+  // brand method
+  async createBrand(data: CreateBrandInput) {
+    const [brand] = await this.db.insert(brands).values(data).returning();
+    return brand;
+  }
+  async getAllBrands(page: number = 1, limit: number = 100) {
+    const offset = (page - 1) * limit;
+    const allBrands = await this.db.query.brands.findMany({
+      limit,
+      offset,
+      orderBy: asc(brands.name),
+    });
+
+    const [total] = await this.db.select({ count: count() }).from(brands);
+    return {
+      brands: allBrands,
+      total: total?.count || 0,
+    };
+  }
+  async getBrandBySlug(slug: string) {
+    return this.db.query.brands.findFirst({
+      where: eq(brands.slug, slug),
+    });
+  }
+  async getBrandById(id: string) {
+    return this.db.query.brands.findFirst({
+      where: eq(brands.id, id),
+    });
+  }
+  async updateBrand(id: string, data: UpdateBrandInput) {
+    const [brand] = await this.db
+      .update(brands)
+      .set(data)
+      .where(eq(brands.id, id))
+      .returning();
+
+    return brand;
+  }
+  async deleteBrand(id: string) {
+    return this.db.delete(brands).where(eq(brands.id, id));
+  }
+  async deleteManyBrandsSchema(ids: string[]) {
+    return this.db.delete(brands).where(inArray(brands.id, ids));
   }
 }

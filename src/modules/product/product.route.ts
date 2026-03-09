@@ -6,18 +6,22 @@ import {
   CATEGORY_TAG,
   PRODUCT_TAG,
   ATTRIBUTE_TAG,
+  BRAND_TAG,
   PAGINATION_QUERYSTRING,
   PRODUCT_DOCUMENTATION,
   CATEGORY_DOCUMENTATION,
   ATTRIBUTE_DOCUMENTATION,
+  BRAND_DOCUMENTATION,
 } from './product.docs';
 import {
   createCategorySchema,
   createProductSchema,
   createAttributeSchema,
+  createBrandSchema,
   deleteManyProductsSchema,
   deleteManyCategoriesSchema,
   deleteManyAttributesSchema,
+  deleteManyBrandsSchema,
 } from './product.validate';
 import { productController } from './product.controller';
 
@@ -35,8 +39,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.CREATE_PRODUCT,
       tags: [PRODUCT_TAG],
     },
-    preHandler: [authenticate],
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    // preHandler: [authenticate],
+    // roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: createProductSchema,
     handler: controller.createProductHandler,
   });
@@ -71,6 +75,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
     method: 'put',
     disableValidator: true,
     swaggerSchema: {
+      body: PRODUCT_DOCUMENTATION.PRODUCT_REQUEST_BODIES.UPDATE_PRODUCT,
       summary: PRODUCT_DOCUMENTATION.PRODUCT_SUMMARIES.UPDATE_PRODUCT,
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.UPDATE_PRODUCT,
       tags: [PRODUCT_TAG],
@@ -293,5 +298,92 @@ export const productRoutes = (fastify: FastifyInstance) => {
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: deleteManyAttributesSchema,
     handler: controller.deleteManyAttributesHandler,
+  });
+
+  // ======= BRAND ROUTE ======= //
+  routeWithZod(fastify, {
+    url: '/brands/create',
+    method: 'post',
+    disableValidator: true,
+    swaggerSchema: {
+      body: BRAND_DOCUMENTATION.BRAND_REQUEST_BODIES.CREATE_BRAND,
+      summary: BRAND_DOCUMENTATION.BRAND_SUMMARIES.CREATE_BRAND,
+      description: BRAND_DOCUMENTATION.BRAND_DESCRIPTIONS.CREATE_BRAND,
+      tags: [BRAND_TAG],
+    },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    bodySchema: createBrandSchema,
+    handler: controller.createBrandHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/brands',
+    method: 'get',
+    disableValidator: true,
+    swaggerSchema: {
+      summary: BRAND_DOCUMENTATION.BRAND_SUMMARIES.GET_ALL_BRANDS,
+      description: BRAND_DOCUMENTATION.BRAND_DESCRIPTIONS.GET_ALL_BRANDS,
+      tags: [BRAND_TAG],
+      querystring: PAGINATION_QUERYSTRING,
+    },
+    handler: controller.getAllBrandsHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/brands/:id',
+    method: 'get',
+    disableValidator: true,
+    swaggerSchema: {
+      summary: BRAND_DOCUMENTATION.BRAND_SUMMARIES.GET_BRAND_BY_ID,
+      description: BRAND_DOCUMENTATION.BRAND_DESCRIPTIONS.GET_BRAND_BY_ID,
+      tags: [BRAND_TAG],
+    },
+    handler: controller.getBrandByIdHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/brands/:id',
+    method: 'put',
+    disableValidator: true,
+    swaggerSchema: {
+      body: BRAND_DOCUMENTATION.BRAND_REQUEST_BODIES.UPDATE_BRAND,
+      summary: BRAND_DOCUMENTATION.BRAND_SUMMARIES.UPDATE_BRAND,
+      description: BRAND_DOCUMENTATION.BRAND_DESCRIPTIONS.UPDATE_BRAND,
+      tags: [BRAND_TAG],
+    },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    handler: controller.updateBrandHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/brands/:id',
+    method: 'delete',
+    disableValidator: true,
+    swaggerSchema: {
+      summary: BRAND_DOCUMENTATION.BRAND_SUMMARIES.DELETE_BRAND,
+      description: BRAND_DOCUMENTATION.BRAND_DESCRIPTIONS.DELETE_BRAND,
+      tags: [BRAND_TAG],
+    },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    handler: controller.deleteBrandHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/brands/delete-many',
+    method: 'delete',
+    disableValidator: true,
+    swaggerSchema: {
+      body: BRAND_DOCUMENTATION.BRAND_REQUEST_BODIES.DELETE_MANY_BRANDS,
+      summary: BRAND_DOCUMENTATION.BRAND_SUMMARIES.DELETE_MANY_BRANDS,
+      description: BRAND_DOCUMENTATION.BRAND_DESCRIPTIONS.DELETE_MANY_BRANDS,
+      tags: [BRAND_TAG],
+    },
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    bodySchema: deleteManyBrandsSchema,
+    handler: controller.deleteManyBrandsHandler,
   });
 };
