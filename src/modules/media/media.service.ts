@@ -73,13 +73,14 @@ class MediaService {
    */
   async createMediaSingle(data: CreateMediaDTO) {
     const folder = await this._getFolderForMedia(data.folderId);
+    const resolvedPath = await this._buildFolderPath(folder.id);
 
     const uploadResult = await handleExternalCall(
       () =>
         uploadImageKitProvider.streamUpload(
           data.file,
           data.fileName,
-          'media-ak-shop'
+          resolvedPath
         ),
       {
         serviceName: 'Imagekit',
@@ -117,6 +118,8 @@ class MediaService {
     folderId?: string
   ) {
     const folder = await this._getFolderForMedia(folderId);
+    const resolvedPath = await this._buildFolderPath(folder.id);
+
     // Array to store upload promises
     const uploadPromises: Promise<{
       uploadResult: any;
@@ -143,7 +146,7 @@ class MediaService {
             uploadImageKitProvider.streamUpload(
               part.file,
               part.filename.split('.')[0] as string,
-              'media-ak-shop'
+              resolvedPath
             ),
           {
             serviceName: 'Imagekit',
@@ -220,7 +223,9 @@ class MediaService {
         serviceName: 'Imagekit',
         errorMessage: `Failed to delete file ${media.fileId} from ImageKit. It is now an orphan.`,
       }
-    );
+    ).catch(() => {
+      // Ignore image kit deletion errors to not fail the request completely
+    });
 
     return media.id;
   }
@@ -265,7 +270,9 @@ class MediaService {
             serviceName: 'Imagekit',
             errorMessage: `Failed to delete file ${fileId} from ImageKit. It is now an orphan.`,
           }
-        );
+        ).catch(() => {
+          // Ignore image kit deletion errors to not fail the request completely
+        });
       });
 
       await Promise.all(deletePromises);
@@ -279,6 +286,24 @@ class MediaService {
   // ============================================================================
   // MEDIA FOLDER SERVICES
   // ============================================================================
+  
+  /**
+   * Tính toán đường dẫn folder đầy đủ trên ImageKit
+   * @param folderId ID của thư mục
+   * @returns Đường dẫn đầy đủ ví dụ "media-ak-shop/a/b"
+   */
+  private async _buildFolderPath(folderId: string | null): Promise<string> {
+    if (!folderId) return 'media-ak-shop';
+    const folder = await this.repo.findById(folderId);
+    if (!folder) return 'media-ak-shop';
+    
+    if (folder.parentId) {
+      const parentPath = await this._buildFolderPath(folder.parentId);
+      return `${parentPath}/${folder.name}`;
+    }
+    return `media-ak-shop/${folder.name}`;
+  }
+
   async createFolder(data: MediaFolderCreateInput) {
     // Business logic: Không cho tạo folder trùng tên trong cùng một cấp
     const existing = await this.repo.findByNameAndParent(
@@ -290,7 +315,20 @@ class MediaService {
         'A folder with this name already exists at this level.'
       );
     }
-    return this.repo.create(data);
+    
+    const newFolder = await this.repo.create(data);
+
+    // Sync to ImageKit
+    const parentFolderPath = await this._buildFolderPath(data.parentId || null);
+    await handleExternalCall(
+      () => uploadImageKitProvider.createFolder(data.name, parentFolderPath),
+      {
+        serviceName: 'Imagekit',
+        errorMessage: 'Failed to create folder on ImageKit.',
+      }
+    );
+
+    return newFolder;
   }
   async getAllFoldersAsTree() {
     const allFolders = await this.repo.findAll();
@@ -325,7 +363,21 @@ class MediaService {
       throw new AppError('Cannot delete a non-empty folder.', 400);
     }
 
-    return this.repo.delete(id);
+    const deletedFolder = await this.repo.delete(id);
+
+    // Sync deletion to ImageKit (if it fails, don't abort DB deletion)
+    const exactFolderPath = await this._buildFolderPath(folder.id);
+    await handleExternalCall(
+      () => uploadImageKitProvider.deleteFolder(exactFolderPath),
+      {
+        serviceName: 'Imagekit',
+        errorMessage: `Failed to delete folder ${exactFolderPath} from ImageKit.`,
+      }
+    ).catch(() => {
+      // already logged by handleExternalCall
+    });
+
+    return deletedFolder;
   }
 }
 
