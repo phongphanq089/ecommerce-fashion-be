@@ -52,8 +52,18 @@ const deleteFile = async (fileId: string): Promise<any> => {
   return await imagekit.deleteFile(fileId);
 };
 
-const deleteFolder = async (folderId: string): Promise<any> => {
-  return await imagekit.deleteFolder(folderId);
+const deleteFolder = async (folderPath: string): Promise<any> => {
+  return await imagekit.deleteFolder(folderPath);
+};
+
+const createFolder = async (
+  folderName: string,
+  parentFolderPath: string = 'media-ak-shop'
+): Promise<any> => {
+  return await imagekit.createFolder({
+    folderName,
+    parentFolderPath,
+  });
 };
 
 const getMedia = async (folder: string): Promise<any> => {
@@ -66,5 +76,6 @@ export const uploadImageKitProvider = {
   streamUpload,
   deleteFile,
   deleteFolder,
+  createFolder,
   getMedia,
 };
