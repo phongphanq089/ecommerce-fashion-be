@@ -297,11 +297,13 @@ class MediaService {
     const folder = await this.repo.findById(folderId);
     if (!folder) return 'media-ak-shop';
     
+    // ImageKit API strict rule: folder paths cannot contain spaces.
+    const sanitizedName = folder.name.replace(/\s+/g, '-');
     if (folder.parentId) {
       const parentPath = await this._buildFolderPath(folder.parentId);
-      return `${parentPath}/${folder.name}`;
+      return `${parentPath}/${sanitizedName}`;
     }
-    return `media-ak-shop/${folder.name}`;
+    return `media-ak-shop/${sanitizedName}`;
   }
 
   async createFolder(data: MediaFolderCreateInput) {
@@ -320,8 +322,9 @@ class MediaService {
 
     // Sync to ImageKit
     const parentFolderPath = await this._buildFolderPath(data.parentId || null);
+    const sanitizedName = data.name.replace(/\s+/g, '-');
     await handleExternalCall(
-      () => uploadImageKitProvider.createFolder(data.name, parentFolderPath),
+      () => uploadImageKitProvider.createFolder(sanitizedName, parentFolderPath),
       {
         serviceName: 'Imagekit',
         errorMessage: 'Failed to create folder on ImageKit.',

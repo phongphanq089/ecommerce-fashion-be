@@ -39,8 +39,8 @@ export const productRoutes = (fastify: FastifyInstance) => {
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.CREATE_PRODUCT,
       tags: [PRODUCT_TAG],
     },
-    // preHandler: [authenticate],
-    // roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    preHandler: [authenticate],
+    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: createProductSchema,
     handler: controller.createProductHandler,
   });
