@@ -38,8 +38,8 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       consumes: ['multipart/form-data'],
       ...MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.UPLOAD_FILE_SINGLE,
     },
-    preHandler: [authenticate, fileUploadMiddleware.single],
-    roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
+    preHandler: [fileUploadMiddleware.single],
+    // roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.createMediaSingle,
   });
 

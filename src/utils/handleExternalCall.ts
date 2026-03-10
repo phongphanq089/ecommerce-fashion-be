@@ -31,13 +31,15 @@ export async function handleExternalCall<T>(
     return await apiCall();
   } catch (error: any) {
     // 1. Log chi tiết cho dev dễ debug
+    console.error(`[handleExternalCall] Error in ${options.serviceName}:`, error?.message, error?.help, error);
     logger.error(`Error calling external service: ${options.serviceName}`, {
       originalError: error.message,
       //  Nếu dùng axios có thể log thêm error.response?.data
     });
 
     // 2. Ném AppError có cấu trúc để global error handler xử lý
-    throw new AppError(options.errorMessage, 502);
+    const reason = error?.message ? ` - Reason: ${error.message}` : '';
+    throw new AppError(`${options.errorMessage}${reason}`, 502);
   }
 }
 

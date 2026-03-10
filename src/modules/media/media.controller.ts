@@ -36,12 +36,12 @@ export const mediaController = (fastify: FastifyInstance) => {
         });
 
         return sendResponseSuccess(201, reply, 'Create media success', media);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error during multiple file upload:', error);
         return sendResponseError(
           500,
           reply,
-          'An error occurred during file processing',
+          error?.message || 'An error occurred during file processing',
           null
         );
       }
