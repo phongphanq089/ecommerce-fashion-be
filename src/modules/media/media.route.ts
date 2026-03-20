@@ -24,11 +24,27 @@ export default function mediaRoutes(fastify: FastifyInstance) {
   const controller = mediaController(fastify);
 
   // ============================================================================
-  // MEDIA FILE ROUTES
+  // MEDIA FILE ROUTES (Base: /api/media)
   // ============================================================================
+  
+  // GET / (Lấy danh sách media)
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/',
+    disableValidator: true,
+    swaggerSchema: {
+      tags: [MEDIA_TAG],
+      summary: MEDIA_FILE_DOCUMENTATION.MEDIA_SUMMARIES.GET_MEDIA,
+      description: MEDIA_FILE_DOCUMENTATION.MEDIA_DESCRIPTIONS.GET_MEDIA,
+      ...MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.GET_MEDIA,
+    },
+    handler: controller.getMedia,
+  });
+
+  // POST /upload (Upload 1 file)
   routeWithZod(fastify, {
     method: 'post',
-    url: '/upload-single',
+    url: '/upload',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_TAG],
@@ -39,13 +55,13 @@ export default function mediaRoutes(fastify: FastifyInstance) {
       ...MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.UPLOAD_FILE_SINGLE,
     },
     preHandler: [fileUploadMiddleware.single],
-    // roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.createMediaSingle,
   });
 
+  // POST /upload/multiple (Upload nhiều file)
   routeWithZod(fastify, {
     method: 'post',
-    url: '/upload-multiple',
+    url: '/upload/multiple',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_TAG],
@@ -59,21 +75,11 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.createMediaMultiple,
   });
-  routeWithZod(fastify, {
-    method: 'get',
-    url: '/get-media',
-    disableValidator: true,
-    swaggerSchema: {
-      tags: [MEDIA_TAG],
-      summary: MEDIA_FILE_DOCUMENTATION.MEDIA_SUMMARIES.GET_MEDIA,
-      description: MEDIA_FILE_DOCUMENTATION.MEDIA_DESCRIPTIONS.GET_MEDIA,
-      ...MEDIA_FILE_DOCUMENTATION.MEDIA_REQUEST_BODIES.GET_MEDIA,
-    },
-    handler: controller.getMedia,
-  });
+
+  // DELETE / (Xóa 1 file)
   routeWithZod(fastify, {
     method: 'delete',
-    url: '/delete-single',
+    url: '/',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_TAG],
@@ -85,9 +91,11 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     handler: controller.deleteMediaSingle,
   });
+
+  // POST /delete-many (Xóa nhiều file - Dùng POST cho an toàn)
   routeWithZod(fastify, {
-    method: 'delete',
-    url: '/delete-multiple',
+    method: 'post',
+    url: '/delete-many',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_TAG],
@@ -101,12 +109,25 @@ export default function mediaRoutes(fastify: FastifyInstance) {
   });
 
   // ============================================================================
-  // MEDIA FOLDER ROUTES
+  // MEDIA FOLDER ROUTES (Base: /api/media/folders)
   // ============================================================================
-  // POST /create
+  
+  // GET /folders (Lấy danh sách thư mục)
+  routeWithZod(fastify, {
+    method: 'get',
+    url: '/folders',
+    swaggerSchema: {
+      tags: [MEDIA_FOLDER_TAG],
+      summary: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_SUMMARIES.GET_ALL,
+      description: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_DESCRIPTIONS.GET_ALL,
+    },
+    handler: controller.getAllFoldersHandler,
+  });
+
+  // POST /folders (Tạo thư mục)
   routeWithZod(fastify, {
     method: 'post',
-    url: '/create',
+    url: '/folders',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
@@ -120,22 +141,10 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     handler: controller.createFolderHandler,
   });
 
-  // GET /folder-getAll
-  routeWithZod(fastify, {
-    method: 'get',
-    url: '/folder-getAll',
-    swaggerSchema: {
-      tags: [MEDIA_FOLDER_TAG],
-      summary: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_SUMMARIES.GET_ALL,
-      description: MEDIA_FOLDER_DOCUMENTATION.MEDIA_FOLDER_DESCRIPTIONS.GET_ALL,
-    },
-    handler: controller.getAllFoldersHandler,
-  });
-
-  // PUT /folder-update
+  // PUT /folders/:id (Cập nhật thư mục)
   routeWithZod(fastify, {
     method: 'put',
-    url: '/folder-update',
+    url: '/folders/:id',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],
@@ -149,9 +158,10 @@ export default function mediaRoutes(fastify: FastifyInstance) {
     handler: controller.updateFolderHandler,
   });
 
+  // DELETE /folders/:id (Xóa thư mục)
   routeWithZod(fastify, {
     method: 'delete',
-    url: '/delete/:id',
+    url: '/folders/:id',
     disableValidator: true,
     swaggerSchema: {
       tags: [MEDIA_FOLDER_TAG],

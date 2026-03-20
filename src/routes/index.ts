@@ -8,9 +8,9 @@ import { FastifyInstance } from 'fastify';
 const registerRoutes = (server: FastifyInstance) => {
   server.register(authRoutes, { prefix: '/api/auth' });
   server.register(mediaRoutes, { prefix: '/api/media' });
-  server.register(productRoutes, { prefix: '/api/product' });
+  server.register(productRoutes, { prefix: '/api/products' });
   server.register(logRoute, { prefix: '/api/logs' });
-  server.register(collectionRoutes, { prefix: '/api/collection' });
+  server.register(collectionRoutes, { prefix: '/api/collections' });
 };
 
 export default registerRoutes;

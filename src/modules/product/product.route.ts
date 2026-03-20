@@ -28,9 +28,9 @@ import { productController } from './product.controller';
 export const productRoutes = (fastify: FastifyInstance) => {
   const controller = productController(fastify);
 
-  // ======= PRODUCT ROUTE ======= //
+  // ======= PRODUCT ROUTE (Base: /api/products) ======= //
   routeWithZod(fastify, {
-    url: '/create-product',
+    url: '/',
     method: 'post',
     disableValidator: true,
     swaggerSchema: {
@@ -46,7 +46,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/products',
+    url: '/',
     method: 'get',
     disableValidator: true,
     swaggerSchema: {
@@ -59,7 +59,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/product/:id',
+    url: '/:id',
     method: 'get',
     disableValidator: true,
     swaggerSchema: {
@@ -71,7 +71,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/update-product/:id',
+    url: '/:id',
     method: 'put',
     disableValidator: true,
     swaggerSchema: {
@@ -86,7 +86,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/delete-product/:id',
+    url: '/:id',
     method: 'delete',
     disableValidator: true,
     swaggerSchema: {
@@ -99,9 +99,10 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteProductHandler,
   });
 
+  // XÓA NHIỀU SẢN PHẨM (Dùng POST để an toàn hơn với Body)
   routeWithZod(fastify, {
-    url: '/delete-products',
-    method: 'delete',
+    url: '/delete-many',
+    method: 'post',
     disableValidator: true,
     swaggerSchema: {
       body: PRODUCT_DOCUMENTATION.PRODUCT_REQUEST_BODIES.DELETE_MANY_PRODUCTS,
@@ -116,9 +117,9 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteManyProductsHandler,
   });
 
-  // ======= CATEGORY ROUTE ======= //
+  // ======= CATEGORY ROUTE (Base: /api/products/categories) ======= //
   routeWithZod(fastify, {
-    url: '/create-category',
+    url: '/categories',
     method: 'post',
     disableValidator: true,
     swaggerSchema: {
@@ -148,7 +149,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/category/:id',
+    url: '/categories/:id',
     method: 'get',
     disableValidator: true,
     swaggerSchema: {
@@ -161,7 +162,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/update-category/:id',
+    url: '/categories/:id',
     method: 'put',
     disableValidator: true,
     swaggerSchema: {
@@ -175,7 +176,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
-    url: '/delete-category/:id',
+    url: '/categories/:id',
     method: 'delete',
     disableValidator: true,
     swaggerSchema: {
@@ -188,9 +189,10 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteCategoryHandler,
   });
 
+  // XÓA NHIỀU DANH MỤC
   routeWithZod(fastify, {
-    url: '/delete-categories',
-    method: 'delete',
+    url: '/categories/delete-many',
+    method: 'post',
     disableValidator: true,
     swaggerSchema: {
       body: CATEGORY_DOCUMENTATION.CATEGORY_REQUEST_BODIES
@@ -206,9 +208,9 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteManyCategoriesHandler,
   });
 
-  // ======= ATTRIBUTE ROUTE ======= //
+  // ======= ATTRIBUTE ROUTE (Base: /api/products/attributes) ======= //
   routeWithZod(fastify, {
-    url: '/attributes/create',
+    url: '/attributes',
     method: 'post',
     disableValidator: true,
     swaggerSchema: {
@@ -281,9 +283,10 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteAttributeHandler,
   });
 
+  // XÓA NHIỀU THUỘC TÍNH
   routeWithZod(fastify, {
     url: '/attributes/delete-many',
-    method: 'delete',
+    method: 'post',
     disableValidator: true,
     swaggerSchema: {
       body: ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_REQUEST_BODIES
@@ -300,9 +303,9 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteManyAttributesHandler,
   });
 
-  // ======= BRAND ROUTE ======= //
+  // ======= BRAND ROUTE (Base: /api/products/brands) ======= //
   routeWithZod(fastify, {
-    url: '/brands/create',
+    url: '/brands',
     method: 'post',
     disableValidator: true,
     swaggerSchema: {
@@ -371,9 +374,10 @@ export const productRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteBrandHandler,
   });
 
+  // XÓA NHIỀU THƯƠNG HIỆU
   routeWithZod(fastify, {
     url: '/brands/delete-many',
-    method: 'delete',
+    method: 'post',
     disableValidator: true,
     swaggerSchema: {
       body: BRAND_DOCUMENTATION.BRAND_REQUEST_BODIES.DELETE_MANY_BRANDS,
