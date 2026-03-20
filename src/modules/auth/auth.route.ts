@@ -207,7 +207,7 @@ export const authRoutes = (fastify: FastifyInstance) => {
   // ===== api text authorization =====
   routeWithZod(fastify, {
     method: 'get',
-    url: '/users-all',
+    url: '/users',
     disableValidator: true,
     preHandler: [authenticate],
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],

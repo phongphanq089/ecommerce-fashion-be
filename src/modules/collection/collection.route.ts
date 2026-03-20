@@ -17,8 +17,25 @@ import { ROLE_NAME } from '@/constants';
 export const collectionRoutes = (fastify: FastifyInstance) => {
   const controller = collectionController(fastify);
 
+  // GET / (Lấy tất cả bộ sưu tập)
   routeWithZod(fastify, {
-    url: '/create',
+    url: '/',
+    method: 'get',
+    disableValidator: true,
+    swaggerSchema: {
+      summary:
+        COLLECTION_DOCUMENTATION.COLLECTION_SUMMARIES.GET_ALL_COLLECTIONS,
+      description:
+        COLLECTION_DOCUMENTATION.COLLECTION_DESCRIPTIONS.GET_ALL_COLLECTIONS,
+      tags: [COLLECTION_TAG],
+      querystring: PAGINATION_QUERYSTRING,
+    },
+    handler: controller.getAllCollectionsHandler,
+  });
+
+  // POST / (Tạo mới bộ sưu tập)
+  routeWithZod(fastify, {
+    url: '/',
     method: 'post',
     disableValidator: true,
     swaggerSchema: {
@@ -35,21 +52,7 @@ export const collectionRoutes = (fastify: FastifyInstance) => {
     handler: controller.createCollectionHandler,
   });
 
-  routeWithZod(fastify, {
-    url: '/get-all',
-    method: 'get',
-    disableValidator: true,
-    swaggerSchema: {
-      summary:
-        COLLECTION_DOCUMENTATION.COLLECTION_SUMMARIES.GET_ALL_COLLECTIONS,
-      description:
-        COLLECTION_DOCUMENTATION.COLLECTION_DESCRIPTIONS.GET_ALL_COLLECTIONS,
-      tags: [COLLECTION_TAG],
-      querystring: PAGINATION_QUERYSTRING,
-    },
-    handler: controller.getAllCollectionsHandler,
-  });
-
+  // GET /:id (Lấy chi tiết)
   routeWithZod(fastify, {
     url: '/:id',
     method: 'get',
@@ -64,8 +67,9 @@ export const collectionRoutes = (fastify: FastifyInstance) => {
     handler: controller.getCollectionByIdHandler,
   });
 
+  // PUT /:id (Cập nhật)
   routeWithZod(fastify, {
-    url: '/update/:id',
+    url: '/:id',
     method: 'put',
     disableValidator: true,
     swaggerSchema: {
@@ -80,8 +84,9 @@ export const collectionRoutes = (fastify: FastifyInstance) => {
     handler: controller.updateCollectionHandler,
   });
 
+  // DELETE /:id (Xóa)
   routeWithZod(fastify, {
-    url: '/delete/:id',
+    url: '/:id',
     method: 'delete',
     disableValidator: true,
     swaggerSchema: {
@@ -95,8 +100,9 @@ export const collectionRoutes = (fastify: FastifyInstance) => {
     handler: controller.deleteCollectionHandler,
   });
 
+  // POST /:id/products (Thêm SP vào collection)
   routeWithZod(fastify, {
-    url: '/:id/add-products',
+    url: '/:id/products',
     method: 'post',
     disableValidator: true,
     swaggerSchema: {

@@ -12,10 +12,10 @@ import { ROLE_NAME } from '@/constants';
 export default async function logRoute(fastify: FastifyInstance) {
   const logDir = path.resolve('logs');
 
-  // ===== API GET FILES ==== ///
+  // GET / (Lấy danh sách file log)
   routeWithZod(fastify, {
     method: 'get',
-    url: '/files',
+    url: '/',
     preHandler: [authenticate],
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     swaggerSchema: {
@@ -32,9 +32,10 @@ export default async function logRoute(fastify: FastifyInstance) {
     },
   });
 
+  // GET /:filename (Xem nội dung file log)
   routeWithZod(fastify, {
     method: 'get',
-    url: '/view/:filename',
+    url: '/:filename',
     preHandler: [authenticate],
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     swaggerSchema: {
@@ -84,9 +85,10 @@ export default async function logRoute(fastify: FastifyInstance) {
     },
   });
 
+  // GET /:filename/search (Tìm kiếm trong file log)
   routeWithZod(fastify, {
     method: 'get',
-    url: '/search/:filename',
+    url: '/:filename/search',
     preHandler: [authenticate],
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     swaggerSchema: {
@@ -142,9 +144,10 @@ export default async function logRoute(fastify: FastifyInstance) {
     },
   });
 
+  // DELETE /:filename (Xóa file log)
   routeWithZod(fastify, {
     method: 'delete',
-    url: '/delete/:filename',
+    url: '/:filename',
     preHandler: [authenticate],
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     swaggerSchema: {
