@@ -8,6 +8,7 @@ import {
   ATTRIBUTE_TAG,
   BRAND_TAG,
   PAGINATION_QUERYSTRING,
+  PRODUCT_PAGINATION_QUERYSTRING,
   PRODUCT_DOCUMENTATION,
   CATEGORY_DOCUMENTATION,
   ATTRIBUTE_DOCUMENTATION,
@@ -53,7 +54,7 @@ export const productRoutes = (fastify: FastifyInstance) => {
       summary: PRODUCT_DOCUMENTATION.PRODUCT_SUMMARIES.GET_ALL_PRODUCTS,
       description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.GET_ALL_PRODUCTS,
       tags: [PRODUCT_TAG],
-      querystring: PAGINATION_QUERYSTRING,
+      querystring: PRODUCT_PAGINATION_QUERYSTRING,
     },
     handler: controller.getAllProductsHandler,
   });
@@ -224,6 +225,18 @@ export const productRoutes = (fastify: FastifyInstance) => {
     roles: [ROLE_NAME.ADMIN, ROLE_NAME.SUPER_ADMIN],
     bodySchema: createAttributeSchema,
     handler: controller.createAttributeHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/attributes/all',
+    method: 'get',
+    disableValidator: true,
+    swaggerSchema: {
+      summary: ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_SUMMARIES.GET_ATTRIBUTES_WITH_VALUES,
+      description: ATTRIBUTE_DOCUMENTATION.ATTRIBUTE_DESCRIPTIONS.GET_ATTRIBUTES_WITH_VALUES,
+      tags: [ATTRIBUTE_TAG],
+    },
+    handler: controller.getAttributesWithValuesHandler,
   });
 
   routeWithZod(fastify, {

@@ -55,6 +55,14 @@ export const createProductSchema = createInsertSchema(products).extend({
   mediaIds: z.array(z.string()).optional(),
   collectionIds: z.array(z.string()).optional(),
   variants: z.array(productVariantSchema).optional(),
+  options: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        values: z.array(z.string()).min(1),
+      })
+    )
+    .optional(),
 });
 
 export const updateProductSchema = z.object({
@@ -87,6 +95,14 @@ export const updateProductSchema = z.object({
   discountStartDate: z.string().optional().nullable(),
   discountEndDate: z.string().optional().nullable(),
   disableShipping: z.boolean().optional(),
+  options: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        values: z.array(z.string()).min(1),
+      })
+    )
+    .optional(),
 });
 
 export const deleteProductSchema = z.object({
@@ -142,8 +158,9 @@ export type GetCategoryInput = z.infer<typeof getCategorySchema>;
  */
 import { attributes } from '@/db/schema';
 
-export const createAttributeSchema = createInsertSchema(attributes).extend({
+export const createAttributeSchema = z.object({
   name: z.string().min(1, 'Attribute name is required'),
+  values: z.array(z.string()).optional(),
 });
 
 export const updateAttributeSchema = createInsertSchema(attributes).extend({

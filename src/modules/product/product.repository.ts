@@ -20,6 +20,7 @@ import {
   productVariants,
   productsToCollections,
   brands,
+  productAttributeOptions,
 } from '@/db/schema';
 import { ilike, and, gte, lte, desc, asc, exists } from 'drizzle-orm';
 
@@ -143,7 +144,55 @@ export class ProductRepository {
           .onConflictDoNothing();
       }
 
-      // 3. Create Variants & Attributes
+      const productId = newProduct.id;
+      const { options } = data;
+
+      // 1.5. Create Product Options (If any)
+      if (options && options.length > 0) {
+        for (const option of options) {
+          // Find or create attribute
+          let attr = await tx.query.attributes.findFirst({
+            where: eq(attributes.name, option.name),
+          });
+
+          if (!attr) {
+            const [newAttr] = await tx
+              .insert(attributes)
+              .values({ name: option.name })
+              .returning();
+            attr = newAttr;
+          }
+
+          // Handle values
+          for (const valName of option.values) {
+            let val = await tx.query.attributeValues.findFirst({
+              where: and(
+                eq(attributeValues.attributeId, attr!.id),
+                eq(attributeValues.value, valName)
+              ),
+            });
+
+            if (!val) {
+              const [newVal] = await tx
+                .insert(attributeValues)
+                .values({
+                  attributeId: attr!.id,
+                  value: valName,
+                })
+                .returning();
+              val = newVal;
+            }
+
+            // Link to Product
+            await tx.insert(productAttributeOptions).values({
+              productId,
+              attributeValueId: val!.id,
+            });
+          }
+        }
+      }
+
+      // 2. Create Variants
       if (variants && variants.length > 0) {
         for (const variant of variants) {
           // 3.1 Create Variant
@@ -343,6 +392,15 @@ export class ProductRepository {
             collection: true,
           },
         },
+        options: {
+          with: {
+            attributeValue: {
+              with: {
+                attribute: true,
+              },
+            },
+          },
+        },
         variants: {
           with: {
             attributes: {
@@ -469,11 +527,25 @@ export class ProductRepository {
   // --- Attribute Methods ---
 
   async createAttribute(data: CreateAttributeInput) {
-    const [attribute] = await this.db
-      .insert(attributes)
-      .values(data)
-      .returning();
-    return attribute;
+    const { name, values } = data;
+
+    return await this.db.transaction(async (tx) => {
+      const [attribute] = await tx
+        .insert(attributes)
+        .values({ name })
+        .returning();
+
+      if (values && values.length > 0) {
+        await tx.insert(attributeValues).values(
+          values.map((value) => ({
+            attributeId: attribute!.id,
+            value,
+          }))
+        );
+      }
+
+      return attribute;
+    });
   }
 
   async getAllAttributes(page: number = 1, limit: number = 10) {
@@ -555,5 +627,13 @@ export class ProductRepository {
   }
   async deleteManyBrandsSchema(ids: string[]) {
     return this.db.delete(brands).where(inArray(brands.id, ids));
+  }
+
+  async getAttributesWithValues() {
+    return this.db.query.attributes.findMany({
+      with: {
+        values: true,
+      },
+    });
   }
 }

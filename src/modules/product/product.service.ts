@@ -151,6 +151,10 @@ export class ProductService {
     return this.repo.deleteManyAttributes(data.ids);
   }
 
+  async getAttributesWithValues() {
+    return this.repo.getAttributesWithValues();
+  }
+
   //======= BRAND SERVICE =======//
 
   async createBrand(data: CreateBrandInput) {

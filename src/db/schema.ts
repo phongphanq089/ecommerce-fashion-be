@@ -226,7 +226,7 @@ export const productImages = pgTable(
       .primaryKey(),
     displayOrder: integer('display_order').default(0),
     productId: text('product_id').notNull(),
-    mediaId: text('media_id').unique().notNull(),
+    mediaId: text('media_id').notNull(),
   },
   (table) => [
     unique().on(table.productId, table.mediaId),
@@ -272,6 +272,23 @@ export const attributeValuesToVariants = pgTable(
   },
   (table) => [
     primaryKey({ columns: [table.attributeValueId, table.productVariantId] }),
+  ]
+);
+
+// Junction table để lưu các tùy chọn thuộc tính CỦA 1 SẢN PHẨM (Options)
+// Hỗ trợ flow: Định nghĩa thuộc tính -> Tạo biến thể
+export const productAttributeOptions = pgTable(
+  'product_attribute_option',
+  {
+    productId: text('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    attributeValueId: text('attribute_value_id')
+      .notNull()
+      .references(() => attributeValues.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.productId, table.attributeValueId] }),
   ]
 );
 
@@ -479,7 +496,22 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     references: [media.id],
     relationName: 'product_metaImage',
   }),
+  options: many(productAttributeOptions),
 }));
+
+export const productAttributeOptionsRelations = relations(
+  productAttributeOptions,
+  ({ one }) => ({
+    product: one(products, {
+      fields: [productAttributeOptions.productId],
+      references: [products.id],
+    }),
+    attributeValue: one(attributeValues, {
+      fields: [productAttributeOptions.attributeValueId],
+      references: [attributeValues.id],
+    }),
+  })
+);
 
 export const brandsRelations = relations(brands, ({ many }) => ({
   products: many(products),
@@ -506,6 +538,7 @@ export const attributeValuesRelations = relations(
       references: [attributes.id],
     }),
     variants: many(attributeValuesToVariants),
+    productOptions: many(productAttributeOptions),
   })
 );
 

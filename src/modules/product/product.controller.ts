@@ -230,6 +230,19 @@ export const productController = (fastify: FastifyInstance) => {
       );
     },
 
+    getAttributesWithValuesHandler: async (
+      _req: FastifyRequest,
+      reply: FastifyReply
+    ) => {
+      const result = await service.getAttributesWithValues();
+      return sendResponseSuccess(
+        200,
+        reply,
+        'Get attributes with values success',
+        result
+      );
+    },
+
     getAttributeByIdHandler: async (
       req: FastifyRequest<{ Params: { id: string } }>,
       reply: FastifyReply
