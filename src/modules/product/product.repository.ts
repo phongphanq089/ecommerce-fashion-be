@@ -368,6 +368,9 @@ export class ProductRepository {
       where: and(...whereConditions),
       orderBy: orderBy,
       with: {
+        brand: true,
+        thumbnail: true,
+        metaImage: true,
         images: {
           with: {
             media: true,

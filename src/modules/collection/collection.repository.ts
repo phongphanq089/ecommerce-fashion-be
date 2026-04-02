@@ -44,6 +44,9 @@ export class CollectionRepository {
           with: {
             product: {
               with: {
+                brand: true,
+                thumbnail: true,
+                metaImage: true,
                 images: {
                   with: {
                     media: true,
@@ -71,6 +74,9 @@ export class CollectionRepository {
           with: {
             product: {
               with: {
+                brand: true,
+                thumbnail: true,
+                metaImage: true,
                 images: {
                   with: {
                     media: true,
