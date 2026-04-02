@@ -27,6 +27,12 @@ export class ProductService {
     if (!existCategory) {
       throw new NotFoundError('Category not found');
     }
+
+    const existSlug = await this.repo.findProductBySlug(data.slug);
+    if (existSlug) {
+      throw new ConflictError('Product slug already exists');
+    }
+
     return this.repo.createProduct(data);
   }
 
@@ -51,7 +57,15 @@ export class ProductService {
 
   async updateProduct(id: string, data: UpdateProductInput) {
     // Check if product exists
-    await this.getProductById(id);
+    const existing = await this.getProductById(id);
+
+    if (data.slug && data.slug !== existing.slug) {
+      const existSlug = await this.repo.findProductBySlug(data.slug);
+      if (existSlug && existSlug.id !== id) {
+        throw new ConflictError('Product slug already exists');
+      }
+    }
+
     return this.repo.updateProduct(id, data);
   }
 

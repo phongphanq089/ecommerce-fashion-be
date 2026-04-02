@@ -59,6 +59,12 @@ export class ProductRepository {
     });
   }
 
+  async findProductBySlug(slug: string) {
+    return this.db.query.products.findFirst({
+      where: eq(products.slug, slug),
+    });
+  }
+
   async createProduct(data: CreateProductInput) {
     const {
       name,
@@ -270,7 +276,7 @@ export class ProductRepository {
         }
       }
 
-      return newProduct;
+      return await this.getProductById(newProduct.id);
     });
   }
 
@@ -295,10 +301,23 @@ export class ProductRepository {
       []
     );
 
-    const { options, ...rest } = product;
+    const mappedVariants = (product.variants || []).map((v: any) => ({
+      ...v,
+      stock: v.stockQuantity,
+    }));
+
+    const totalStock = mappedVariants.reduce(
+      (acc: number, variant: any) => acc + (variant.stock || 0),
+      0
+    );
+
+    const { options, variants: oldVariants, tags, ...rest } = product;
     return {
       ...rest,
       options: groupedOptions,
+      variants: mappedVariants,
+      stock: totalStock,
+      tags: tags || [],
     };
   }
 
