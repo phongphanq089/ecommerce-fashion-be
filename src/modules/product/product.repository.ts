@@ -22,7 +22,7 @@ import {
   brands,
   productAttributeOptions,
 } from '@/db/schema';
-import { ilike, and, gte, lte, desc, asc, exists } from 'drizzle-orm';
+import { ilike, and, or, isNull, gte, gt, lte, desc, asc, exists } from 'drizzle-orm';
 
 export interface GetProductsFilter {
   page: number;
@@ -33,6 +33,7 @@ export interface GetProductsFilter {
   maxPrice?: number | undefined;
   sort?: 'price_asc' | 'price_desc' | 'newest' | 'oldest' | undefined;
   brandId?: string;
+  isFlashSale?: boolean;
 }
 
 export class ProductRepository {
@@ -331,6 +332,7 @@ export class ProductRepository {
       minPrice,
       maxPrice,
       sort,
+      isFlashSale,
     } = query;
 
     const offset = (page - 1) * limit;
@@ -366,6 +368,17 @@ export class ProductRepository {
                   : undefined
               )
             )
+        )
+      );
+    }
+
+    if (isFlashSale) {
+      const now = new Date();
+      whereConditions.push(
+        and(
+          gt(products.discountValue, 0), // Has discount
+          or(isNull(products.discountStartDate), lte(products.discountStartDate, now)), // Started or no start date
+          or(isNull(products.discountEndDate), gte(products.discountEndDate, now)) // Not yet ended or no end date
         )
       );
     }

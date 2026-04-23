@@ -60,6 +60,42 @@ export const productRoutes = (fastify: FastifyInstance) => {
   });
 
   routeWithZod(fastify, {
+    url: '/new-arrivals',
+    method: 'get',
+    disableValidator: true,
+    swaggerSchema: {
+      summary: PRODUCT_DOCUMENTATION.PRODUCT_SUMMARIES.GET_NEW_ARRIVALS,
+      description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.GET_NEW_ARRIVALS,
+      tags: [PRODUCT_TAG],
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 10 },
+        },
+      },
+    },
+    handler: controller.getNewArrivalsHandler,
+  });
+
+  routeWithZod(fastify, {
+    url: '/flash-sales',
+    method: 'get',
+    disableValidator: true,
+    swaggerSchema: {
+      summary: PRODUCT_DOCUMENTATION.PRODUCT_SUMMARIES.GET_FLASH_SALES,
+      description: PRODUCT_DOCUMENTATION.PRODUCT_DESCRIPTIONS.GET_FLASH_SALES,
+      tags: [PRODUCT_TAG],
+      querystring: {
+        type: 'object',
+        properties: {
+          limit: { type: 'number', default: 10 },
+        },
+      },
+    },
+    handler: controller.getFlashSalesHandler,
+  });
+
+  routeWithZod(fastify, {
     url: '/:id',
     method: 'get',
     disableValidator: true,

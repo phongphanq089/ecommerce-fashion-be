@@ -74,6 +74,42 @@ export const productController = (fastify: FastifyInstance) => {
       );
     },
 
+    getNewArrivalsHandler: async (
+      req: FastifyRequest<{ Querystring?: { limit?: number } }>,
+      reply: FastifyReply
+    ) => {
+      const limit = Number(req.query?.limit) || 10;
+      const result = await service.getAllProducts({
+        page: 1,
+        limit,
+        sort: 'newest',
+      });
+      return sendResponseSuccess(
+        200,
+        reply,
+        'Get new arrivals success',
+        result
+      );
+    },
+
+    getFlashSalesHandler: async (
+      req: FastifyRequest<{ Querystring?: { limit?: number } }>,
+      reply: FastifyReply
+    ) => {
+      const limit = Number(req.query?.limit) || 10;
+      const result = await service.getAllProducts({
+        page: 1,
+        limit,
+        isFlashSale: true,
+      });
+      return sendResponseSuccess(
+        200,
+        reply,
+        'Get flash sales success',
+        result
+      );
+    },
+
     getProductByIdHandler: async (
       req: FastifyRequest<{ Params?: { id: string } }>,
       reply: FastifyReply
