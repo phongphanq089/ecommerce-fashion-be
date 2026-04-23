@@ -4,6 +4,8 @@ import mediaRoutes from '@/modules/media/media.route';
 import { productRoutes } from '@/modules/product/product.route';
 import { collectionRoutes } from '@/modules/collection/collection.route';
 import { FastifyInstance } from 'fastify';
+import { settingRoutes } from '@/modules/setting/setting.route';
+import { navigationRoutes } from '@/modules/navigation/navigation.route';
 
 const registerRoutes = (server: FastifyInstance) => {
   server.register(authRoutes, { prefix: '/api/auth' });
@@ -11,6 +13,8 @@ const registerRoutes = (server: FastifyInstance) => {
   server.register(productRoutes, { prefix: '/api/products' });
   server.register(logRoute, { prefix: '/api/logs' });
   server.register(collectionRoutes, { prefix: '/api/collections' });
+  server.register(navigationRoutes, { prefix: '/api/navigate' });
+  server.register(settingRoutes, { prefix: '/api/settings' });
 };
 
 export default registerRoutes;

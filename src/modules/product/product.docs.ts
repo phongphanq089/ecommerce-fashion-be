@@ -47,6 +47,8 @@ export const PRODUCT_DOCUMENTATION = {
   PRODUCT_SUMMARIES: {
     CREATE_PRODUCT: 'Create a new product',
     GET_ALL_PRODUCTS: 'Get all products',
+    GET_NEW_ARRIVALS: 'Get new arrivals products',
+    GET_FLASH_SALES: 'Get flash sales products',
     GET_PRODUCT_BY_ID: 'Get product by id',
     UPDATE_PRODUCT: 'Update product',
     DELETE_PRODUCT: 'Delete product',
@@ -55,6 +57,8 @@ export const PRODUCT_DOCUMENTATION = {
   PRODUCT_DESCRIPTIONS: {
     CREATE_PRODUCT: 'Create a new product',
     GET_ALL_PRODUCTS: 'Get all products',
+    GET_NEW_ARRIVALS: 'Get the latest new products for the homepage',
+    GET_FLASH_SALES: 'Get products that are currently on flash sale',
     GET_PRODUCT_BY_ID: 'Get product by id',
     UPDATE_PRODUCT: 'Update product',
     DELETE_PRODUCT: 'Delete product',
