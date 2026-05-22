@@ -52,10 +52,10 @@ export const authController = (fastify: FastifyInstance) => {
       });
 
       // Remove refreshToken from body response if not mobile
-      if (!req.body?.isMobile) {
-        const { refreshToken, ...response } = result;
-        return sendResponseSuccess(200, reply, 'Login success', response);
-      }
+      // if (!req.body?.isMobile) {
+      //   const { refreshToken, ...response } = result;
+      //   return sendResponseSuccess(200, reply, 'Login success', response);
+      // }
 
       return sendResponseSuccess(200, reply, 'Login success', result);
     },

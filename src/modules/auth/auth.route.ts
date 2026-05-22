@@ -62,7 +62,6 @@ export const authRoutes = (fastify: FastifyInstance) => {
         properties: {
           email: { type: 'string', format: 'email' },
           password: { type: 'string' },
-          isMobile: { type: 'boolean', nullable: true },
         },
       },
     },
